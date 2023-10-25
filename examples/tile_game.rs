@@ -1,6 +1,6 @@
 use bevy_ecs::system::{Query, Res, ResMut};
-use glam::{Quat, Vec3};
-use tile_based_game::prelude::*;
+use glam::{Quat, Vec3, Vec2};
+use tile_based_game::{prelude::*, primitives::rect, collision::Box2D};
 
 fn main() {
     pollster::block_on(run());
@@ -15,36 +15,21 @@ pub async fn run() {
     // State::new uses async code, so we're going to wait for it to finish
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //add models
-    const SPACE_BETWEEN: f32 = 3.0;
-    const NUM_INSTANCES_PER_ROW: usize = 100;
+    //custom mesh
+    let p1 = Vec2::new(-0.5, -0.5);
+    let p2 = Vec2::new(0.5, 0.5);
+    let (vertices, indices) = rect(p1,p2);
+    let collider = Box2D::new(p1,p2);
+    let mut instance = Instance { ..Default::default()};
     let mut instances = vec![];
-    for x in 0..NUM_INSTANCES_PER_ROW {
-        for y in 0..NUM_INSTANCES_PER_ROW {
-            let x = SPACE_BETWEEN * (x as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0);
-            let y = SPACE_BETWEEN * (y as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0);
-
-            let position = Vec3 { x, y, z: 0. };
-
-            let rotation = Quat::from_axis_angle(position.normalize(), f32::to_radians(45.0));
-
-            let instance = Instance {
-                position,
-                rotation,
-                ..Default::default()
-            };
-
-            instances.push((instance,));
-        }
-    }
-    state
-        .create_model_instances(
-            "cube.obj",
-            instances.iter_mut().map(|(instance,)| instance).collect(),
-            true,
-        )
-        .await;
-    state.world.spawn_batch(instances);
-    state.schedule.add_systems((movement, movement_with_key));
+    instances.push(&mut instance);
+    state.build_mesh(
+        vertices,
+        indices,
+        instances,
+        state.compile_material("rounded_rect.png").await,
+        false,
+    );
     //render loop
     run_event_loop(state, event_loop);
 }
