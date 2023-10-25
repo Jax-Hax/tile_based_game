@@ -1,18 +1,18 @@
 use bevy_ecs::component::Component;
 use wgpu::{Buffer, Queue};
-use crate::{prelude::InstanceRaw, structs::MeshType};
+use crate::{prelude::InstanceRaw, structs::Mesh};
 #[derive(Component)]
 pub struct Prefab {
     pub length: u32,
     pub buffer: Buffer,
-    pub mesh_type: MeshType,
+    pub mesh: Mesh,
     pub is_changed: bool, //set each time an instance is changed and it is remade at end of frame
 }
 impl Prefab {
-    pub fn new(buffer: Buffer, mesh_type: MeshType, length: u32) -> Self {
+    pub fn new(buffer: Buffer, mesh: Mesh, length: u32) -> Self {
         Self {
             buffer,
-            mesh_type,
+            mesh,
             length,
             is_changed: false,
         }

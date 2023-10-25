@@ -1,15 +1,12 @@
-use crate::model::{Material, Model};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 use winit::{
     dpi::PhysicalPosition,
     event::{ElementState, MouseScrollDelta, VirtualKeyCode},
 };
-pub enum MeshType {
-    Model(Model),
-    SingleMesh(SingleMesh),
-}
-pub struct SingleMesh {
+
+use crate::material::Material;
+pub struct Mesh {
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
     pub num_elements: u32,

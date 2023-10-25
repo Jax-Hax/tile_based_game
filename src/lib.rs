@@ -1,6 +1,5 @@
 pub mod camera;
 pub mod structs;
-pub mod model;
 pub mod loader;
 pub mod shader;
 pub mod state;
@@ -12,6 +11,7 @@ pub mod collision;
 pub mod event;
 pub mod resources;
 pub mod instance;
+pub mod material;
 mod render;
 pub mod prelude {
     pub use crate::{
