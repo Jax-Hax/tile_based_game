@@ -1,12 +1,11 @@
 use instant::Duration;
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
 
-use crate::{state::State, render::render, resources::{WindowEvents, MousePos, DeltaTime}};
+use crate::{state::State, render::render, resources::{WindowEvents, MousePos, DeltaTime}, camera::default_cam};
 
 pub fn run_event_loop(
     mut state: State,
     event_loop: EventLoop<()>,
-    cam_update: Option<fn (&mut State, dt: std::time::Duration)>,
 ) {
     let mut last_render_time = instant::Instant::now();
     
@@ -56,9 +55,7 @@ pub fn run_event_loop(
                 last_render_time = now;
                 let mut delta_time = state.world.get_resource_mut::<DeltaTime>().unwrap();
                 delta_time.dt = dt;
-                if cam_update.is_some() {
-                    cam_update.unwrap()(&mut state, dt);
-                }
+                default_cam(&mut state, dt);
                 state.update();
                 state.schedule.run(&mut state.world);
                 state.world.get_resource_mut::<WindowEvents>().unwrap().keys_pressed = vec![];

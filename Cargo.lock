@@ -2223,6 +2223,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "tile_based_game"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bevy_ecs",
+ "bytemuck",
+ "cfg-if",
+ "console_error_panic_hook",
+ "console_log",
+ "env_logger",
+ "fs_extra",
+ "futures-intrusive",
+ "getrandom 0.2.10",
+ "glam",
+ "glob",
+ "image",
+ "instant",
+ "log",
+ "noise",
+ "pollster",
+ "reqwest",
+ "slab",
+ "time",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "wgpu",
+ "winit",
+]
+
+[[package]]
 name = "time"
 version = "0.3.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2445,37 +2476,6 @@ name = "version_check"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
-
-[[package]]
-name = "vertix"
-version = "0.4.10"
-dependencies = [
- "anyhow",
- "bevy_ecs",
- "bytemuck",
- "cfg-if",
- "console_error_panic_hook",
- "console_log",
- "env_logger",
- "fs_extra",
- "futures-intrusive",
- "getrandom 0.2.10",
- "glam",
- "glob",
- "image",
- "instant",
- "log",
- "noise",
- "pollster",
- "reqwest",
- "slab",
- "time",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
- "wgpu",
- "winit",
-]
 
 [[package]]
 name = "waker-fn"

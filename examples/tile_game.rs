@@ -1,9 +1,6 @@
 use bevy_ecs::system::{Query, Res, ResMut};
 use glam::{Quat, Vec3};
-use vertix::{
-    camera::{default_3d_cam, Camera},
-    prelude::*,
-};
+use tile_based_game::prelude::*;
 
 fn main() {
     pollster::block_on(run());
@@ -49,7 +46,7 @@ pub async fn run() {
     state.world.spawn_batch(instances);
     state.schedule.add_systems((movement, movement_with_key));
     //render loop
-    run_event_loop(state, event_loop, Some(default_3d_cam));
+    run_event_loop(state, event_loop);
 }
 fn movement(
     mut query: Query<(&mut Instance,)>,
