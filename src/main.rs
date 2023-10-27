@@ -1,5 +1,5 @@
 use bevy_ecs::system::{Query, Res, ResMut};
-use glam::{Quat, Vec3, Vec2};
+use glam::{Vec3, Vec2};
 use tile_based_game::{prelude::*, primitives::rect, collision::Box2D};
 
 fn main() {

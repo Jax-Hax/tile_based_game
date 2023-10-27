@@ -1,4 +1,4 @@
-use glam::{Mat4, Vec3};
+use glam::Vec3;
 use instant::Duration;
 use wgpu::util::DeviceExt;
 use wgpu::{Device, SurfaceConfiguration, Buffer, BindGroupLayout, BindGroup};
