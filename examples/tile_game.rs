@@ -8,16 +8,14 @@ fn main() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {
     let camera = Camera::new(
-        Vec3::new(0.0, 5.0, 10.0),
-        f32::to_radians(-90.0),
-        f32::to_radians(-20.0),
+        Vec3::new(0.0, 5.0, 0.0)
     );
     // State::new uses async code, so we're going to wait for it to finish
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //add models
     //custom mesh
-    let p1 = Vec2::new(-0.5, -0.5);
-    let p2 = Vec2::new(0.5, 0.5);
+    let p1 = Vec2::new(-10.5, -10.5);
+    let p2 = Vec2::new(10.5, 10.5);
     let (vertices, indices) = rect(p1,p2);
     let collider = Box2D::new(p1,p2);
     let mut instance = Instance { ..Default::default()};
@@ -27,7 +25,7 @@ pub async fn run() {
         vertices,
         indices,
         instances,
-        state.compile_material("rounded_rect.png").await,
+        state.compile_material("cube-diffuse.jpg").await,
         false,
     );
     //render loop

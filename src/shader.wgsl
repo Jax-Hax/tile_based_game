@@ -1,7 +1,7 @@
 // Vertex shader
 
 struct Camera {
-    pos: vec3<f32>,
+    pos: vec4<f32>,
 }
 @group(1) @binding(0)
 var<uniform> camera: Camera;
@@ -12,7 +12,7 @@ struct VertexInput {
 }
 struct InstanceInput {
     @location(5) model_transform: vec3<f32>,
-    @location(10) is_world_space: u32,
+    @location(6) is_world_space: u32,
 }
 
 struct VertexOutput {
@@ -30,10 +30,10 @@ fn vs_main(
     var out: VertexOutput;
     out.tex_coords = model.tex_coords;
     if (instance.is_world_space == u32(1)) {
-        out.clip_position = camera.view_proj * world_position;
+        out.clip_position = camera.pos + world_position;
     }
     else {
-        out.clip_position = world_position;
+        out.clip_position = camera.pos + world_position;
     }
     return out;
 }
@@ -47,5 +47,5 @@ var s_diffuse: sampler;
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    return textureSample(t_diffuse, s_diffuse, in.tex_coords) * in.color;
+    return textureSample(t_diffuse, s_diffuse, in.tex_coords);
 }

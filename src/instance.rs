@@ -63,7 +63,7 @@ impl InstanceRaw {
                 },
                 wgpu::VertexAttribute {
                     offset: mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
-                    shader_location: 10,
+                    shader_location: 6,
                     format: wgpu::VertexFormat::Uint32,
                 },
             ],

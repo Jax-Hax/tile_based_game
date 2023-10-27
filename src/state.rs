@@ -162,9 +162,6 @@ impl State {
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
-            self.camera
-                .projection
-                .resize(new_size.width, new_size.height);
             self.window.size = new_size;
             self.config.width = new_size.width;
             self.config.height = new_size.height;
@@ -210,7 +207,7 @@ impl State {
     pub fn update(&mut self) {
         self.camera
             .camera_uniform
-            .update_view_proj(&self.camera.camera_transform, &self.camera.projection);
+            .update_view_proj(&self.camera.camera_transform);
         let queue = self.world.get_resource_mut::<UpdateInstance>().unwrap();
         queue.queue.write_buffer(
             &self.camera.buffer,
