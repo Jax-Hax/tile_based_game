@@ -22,7 +22,6 @@ impl CameraUniform {
 
     pub fn update_view_proj(&mut self, camera: &Camera) {
         self.pos = camera.position.extend(1.0).into();
-        println!("{:#?}", self.pos);
     }
 }
 pub struct CameraStruct{
@@ -92,6 +91,6 @@ pub fn default_cam(state: &mut State, dt: Duration) {
     let mut camera = &mut state.camera.camera_transform;
     let controller = &mut state.camera.camera_controller;
     // Move left/right and up/down
-    camera.position.x += (controller.amount_right - controller.amount_left) * controller.speed * dt;
-    camera.position.y += (controller.amount_up - controller.amount_down) * controller.speed * dt;
+    camera.position.x -= (controller.amount_right - controller.amount_left) * controller.speed * dt;
+    camera.position.y -= (controller.amount_up - controller.amount_down) * controller.speed * dt;
 }
