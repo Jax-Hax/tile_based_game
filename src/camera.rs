@@ -21,7 +21,7 @@ impl CameraUniform {
     }
 
     pub fn update_view_proj(&mut self, camera: &Camera) {
-        self.pos = camera.position.extend(1.0).into();
+        self.pos = camera.position.extend(0.0).into();
     }
 }
 pub struct CameraStruct{

@@ -42,7 +42,7 @@ impl InstanceRaw {
     pub fn new(position: Vec3, is_world_space: bool) -> Self {
         Self {
             model: Mat4::from_translation(position).to_cols_array_2d(),
-            is_world_space: if is_world_space { 1 } else { 0 },
+            is_world_space: if is_world_space { 0 } else { 1 },
         }
     }
     pub fn desc() -> wgpu::VertexBufferLayout<'static> {
