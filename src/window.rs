@@ -124,6 +124,7 @@ impl Window {
             .await
             .unwrap();
         log::warn!("device and queue");
+        
         (
             Self {
                 window,

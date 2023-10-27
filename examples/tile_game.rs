@@ -14,7 +14,7 @@ pub async fn run() {
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //add models
     //custom mesh
-    let p1 = Vec2::new(-0.5, -0.5);
+    let p1 = Vec2::new(0., 0.);
     let p2 = Vec2::new(0.5, 0.5);
     let (vertices, indices) = rect(p1,p2);
     let collider = Box2D::new(p1,p2);

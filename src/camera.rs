@@ -19,9 +19,11 @@ impl CameraUniform {
             pos: [0.0; 4],
         }
     }
-
+    pub fn update_screen_size(&mut self, width: u32, height: u32) {
+        self.pos[3] = (width as f32) /(height as f32);
+    }
     pub fn update_view_proj(&mut self, camera: &Camera) {
-        self.pos = camera.position.extend(0.0).into();
+        self.pos = camera.position.extend(self.pos[3]).into();
     }
 }
 pub struct CameraStruct{
@@ -36,7 +38,7 @@ impl CameraStruct{
     pub fn new(device: &Device, config: &SurfaceConfiguration, camera: Camera, camera_controller: CameraController) -> Self{
         let mut camera_uniform = CameraUniform::new();
         camera_uniform.update_view_proj(&camera);
-    
+        camera_uniform.update_screen_size(config.width, config.height);
         let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera Buffer"),
             contents: bytemuck::cast_slice(&[camera_uniform]),

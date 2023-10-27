@@ -22,14 +22,16 @@ struct VertexOutput {
 
 @vertex
 fn vs_main(
-    model: VertexInput,
+    vertex: VertexInput,
     instance: InstanceInput,
 ) -> VertexOutput {
+    var model = vertex;
+    model.position.y = model.position.y * camera.pos.w; //hid the aspect ratio in the w component
     let world_position = vec4<f32>(instance.model_transform + model.position, 1.0);
     var out: VertexOutput;
     out.tex_coords = model.tex_coords;
     if (instance.is_world_space == u32(0)) {
-        out.clip_position = camera.pos + world_position;
+        out.clip_position = vec4<f32>(camera.pos.xyz,0.0) + world_position;
     }
     else {
         out.clip_position = world_position;
