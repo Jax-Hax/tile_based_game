@@ -16,8 +16,8 @@ pub async fn run() {
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //add models
     //custom mesh
-    let world = gen(&mut state, 100, 50);
-    //world.save_to_image("output.png");
+    let mut world = gen(&mut state, 1000, 500);
+    world.save_to_image("output.png");
     //render loop
-    
+    //run_event_loop(state, event_loop);
 }
