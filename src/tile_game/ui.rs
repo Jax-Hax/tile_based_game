@@ -23,9 +23,9 @@ pub async fn gen_new_world_btn(state: &mut State) {
     state.world.spawn((instance, collider));
     state.schedule.add_systems(check_collisions);
 }
-fn check_collisions(query: Query<(&Instance, &Box2D)>, mouse_pos: Res<MousePos>) {
+fn check_collisions(query: Query<(&Instance, &Box2D)>, window_events: Res<WindowEvents>) {
     for (_instance, collider) in &query {
-        if collider.check_collision(&mouse_pos.pos) {
+        if collider.check_collision(&window_events.mouse_pos) && window_events.left_clicked() {
             let mut world = gen(1000, 500, rand::thread_rng().gen_range(0..100000));
             world.save_to_image("output.png");
         }

@@ -5,7 +5,7 @@ use crate::{
     loader::load_texture,
     shader,
     structs::{CameraController, Mesh},
-    texture, window, resources::{UpdateInstance, MousePos, DeltaTime, WindowEvents}, primitives::rect, material::Material,
+    texture, window, resources::{UpdateInstance, DeltaTime, WindowEvents, MouseClickType}, primitives::rect, material::Material,
 };
 use bevy_ecs::prelude::*;
 use glam::Vec2;
@@ -26,7 +26,6 @@ pub struct State {
     pub depth_texture: texture::Texture,
     pub window: window::Window,
     pub texture_bind_group_layout: wgpu::BindGroupLayout,
-    pub mouse_pressed: bool,
     pub mouse_locked: bool,
     build_path: String,
     pub world: World,
@@ -127,15 +126,12 @@ impl State {
         );
         window.window.set_visible(true);
         let mut world = World::new();
-        world.insert_resource(MousePos {
-            pos: PhysicalPosition { x: 0.0, y: 0.0 },
-        });
         world.insert_resource(UpdateInstance {
             queue,
             prefab_slab: Slab::new(),
         });
         world.insert_resource(DeltaTime { dt: Duration::ZERO });
-        world.insert_resource(WindowEvents { keys_pressed: vec![] });
+        world.insert_resource(WindowEvents { keys_pressed: vec![], mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 }, left_mouse: MouseClickType::NotHeld, right_mouse: MouseClickType::NotHeld, middle_mouse: MouseClickType::NotHeld });
         let schedule = Schedule::default();
         (
             
@@ -147,7 +143,6 @@ impl State {
                 depth_texture,
                 window,
                 texture_bind_group_layout,
-                mouse_pressed: false,
                 mouse_locked: mouse_lock,
                 build_path: build_path.to_string(),
                 world,
@@ -195,11 +190,19 @@ impl State {
                 true
             }
             WindowEvent::MouseInput {
-                button: MouseButton::Left,
+                button,
                 state,
                 ..
             } => {
-                self.mouse_pressed = *state == ElementState::Pressed;
+                let mut events = self.world
+                    .get_resource_mut::<WindowEvents>()
+                    .unwrap();
+                match button {
+                    MouseButton::Left => events.left_mouse = if *state == ElementState::Pressed {MouseClickType::Clicked} else {MouseClickType::Released},
+                    MouseButton::Right => events.right_mouse = if *state == ElementState::Pressed {MouseClickType::Clicked} else {MouseClickType::Released},
+                    MouseButton::Middle => events.middle_mouse = if *state == ElementState::Pressed {MouseClickType::Clicked} else {MouseClickType::Released},
+                    _ => {}
+                }
                 true
             }
             _ => false,

@@ -4,10 +4,6 @@ use winit::{dpi::PhysicalPosition, event::{VirtualKeyCode, ElementState}};
 
 use crate::prefabs::Prefab;
 #[derive(Resource)]
-pub struct MousePos {
-    pub pos: PhysicalPosition<f32>,
-}
-#[derive(Resource)]
 pub struct UpdateInstance {
     pub queue: wgpu::Queue,
     pub prefab_slab: Slab<Prefab>,
@@ -15,6 +11,16 @@ pub struct UpdateInstance {
 #[derive(Resource)]
 pub struct WindowEvents {
     pub keys_pressed: Vec<(VirtualKeyCode, ElementState)>,
+    pub mouse_pos: PhysicalPosition<f32>,
+    pub left_mouse: MouseClickType,
+    pub right_mouse: MouseClickType,
+    pub middle_mouse: MouseClickType,
+}
+pub enum MouseClickType{
+    Clicked,
+    Held,
+    Released,
+    NotHeld
 }
 impl WindowEvents {
     pub fn is_key_pressed(&self, key: VirtualKeyCode, press_type: Option<ElementState>) -> bool {
@@ -32,6 +38,36 @@ impl WindowEvents {
             }
         }
         false
+    }
+    pub fn left_clicked(&self) -> bool {
+        if let MouseClickType::Clicked = self.left_mouse{
+            return true;
+        }
+        false
+    }
+    pub fn left_held(&self) -> bool {
+        if let MouseClickType::Held = self.left_mouse{
+            return true;
+        }
+        false
+    }
+    pub fn next_frame(&mut self) {
+        self.keys_pressed = vec![];
+        match self.left_mouse {
+            MouseClickType::Clicked => self.left_mouse = MouseClickType::Held,
+            MouseClickType::Released => self.left_mouse = MouseClickType::NotHeld,
+            _ => {}
+        }
+        match self.right_mouse {
+            MouseClickType::Clicked => self.left_mouse = MouseClickType::Held,
+            MouseClickType::Released => self.left_mouse = MouseClickType::NotHeld,
+            _ => {}
+        }
+        match self.middle_mouse {
+            MouseClickType::Clicked => self.left_mouse = MouseClickType::Held,
+            MouseClickType::Released => self.left_mouse = MouseClickType::NotHeld,
+            _ => {}
+        }
     }
 }
 #[derive(Resource)]
