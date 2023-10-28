@@ -7,11 +7,11 @@ struct Camera {
 var<uniform> camera: Camera;
 
 struct VertexInput {
-    @location(0) position: vec3<f32>,
+    @location(0) position: vec4<f32>,
     @location(1) tex_coords: vec2<f32>,
 }
 struct InstanceInput {
-    @location(5) model_transform: vec3<f32>,
+    @location(5) model_transform: vec4<f32>,
     @location(6) is_world_space: u32,
 }
 
@@ -27,7 +27,7 @@ fn vs_main(
 ) -> VertexOutput {
     var model = vertex;
     model.position.y = model.position.y * camera.pos.w; //hid the aspect ratio in the w component
-    let world_position = vec4<f32>(instance.model_transform + model.position, 1.0);
+    let world_position = instance.model_transform * model.position;
     var out: VertexOutput;
     out.tex_coords = model.tex_coords;
     if (instance.is_world_space == u32(0)) {
