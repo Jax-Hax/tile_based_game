@@ -22,8 +22,8 @@ pub async fn run() {
     let p2 = Vec2::new(0.5, 0.5);
     let (vertices, indices) = rect(p1,p2);
     let collider = Box2D::new(p1,p2);
-    let mut instance = Instance {is_world_space: false, ..Default::default()};
-    let mut instance2 = Instance {is_world_space: false, position: Vec3::new(1.0,1.0,0.0), ..Default::default()};
+    let mut instance = Instance {..Default::default()};
+    let mut instance2 = Instance {position: Vec3::new(1.0,1.0,0.0), ..Default::default()};
     let mut instances = vec![];
     instances.push(&mut instance);
     instances.push(&mut instance2);
