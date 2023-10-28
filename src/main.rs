@@ -1,7 +1,10 @@
 use bevy_ecs::system::{Query, Res, ResMut};
 use glam::{Vec3, Vec2};
 use tile_based_game::{prelude::*, primitives::rect, collision::Box2D};
-mod tile_game;
+use tile_game::terrain::gen;
+mod tile_game{
+    pub mod terrain;
+}
 fn main() {
     pollster::block_on(run());
 }
@@ -14,20 +17,7 @@ pub async fn run() {
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //add models
     //custom mesh
-    let p1 = Vec2::new(-0.5, -0.5);
-    let p2 = Vec2::new(0.5, 0.5);
-    let (vertices, indices) = rect(p1,p2);
-    let collider = Box2D::new(p1,p2);
-    let mut instance = Instance { ..Default::default()};
-    let mut instances = vec![];
-    instances.push(&mut instance);
-    state.build_mesh(
-        vertices,
-        indices,
-        instances,
-        state.compile_material("cube-diffuse.jpg").await,
-        false,
-    );
+    gen();
     //render loop
     run_event_loop(state, event_loop);
 }
