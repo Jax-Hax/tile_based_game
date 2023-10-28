@@ -7,7 +7,7 @@ use super::terrain::gen;
 
 pub async fn gen_new_world_btn(state: &mut State) {
     let p1 = Vec2::new(-0.5, -0.5);
-    let p2 = Vec2::new(0.5, 0.5);
+    let p2 = Vec2::new(-0.7, -0.6);
     let (vertices, indices) = rect(p1,p2);
     let collider = Box2D::new(p1,p2);
     let mut instance = Instance {is_world_space: false, ..Default::default()};

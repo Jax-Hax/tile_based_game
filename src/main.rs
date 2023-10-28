@@ -15,7 +15,7 @@ pub async fn run() {
         Vec3::new(0.0, 0.0, 0.0)
     );
     // State::new uses async code, so we're going to wait for it to finish
-    let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
+    let (mut state, event_loop) = State::new(false, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //add models
     //custom mesh
     let mut world = gen(1000, 500, 1);
