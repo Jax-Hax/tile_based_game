@@ -7,7 +7,21 @@ pub fn gen(state: &mut State, width: usize, height: usize) -> World {
     dirt_pass(&mut world);
     world
 }
-fn dirt_pass(world: &mut World) {}
+fn dirt_pass(world: &mut World) {
+    for row in 0..world.world_height {
+        for col in 0..world.world_width {
+            let block = world.get_block(row, col).unwrap();
+            if row < 50{
+                block.block_id = 0;
+            } else if row < 100 {
+                block.block_id = 1
+            }
+            else {
+                block.block_id = 2;
+            }
+        }
+    }
+}
 async fn render_chunk(chunk: &mut Chunk, state: &mut State) {
     let mut row_idx = 0;
     let mut instances = vec![];
@@ -55,7 +69,7 @@ impl World {
         };
         World {
             world_width: width / 16 * 16,
-            world_height: height / 16 * 16,
+            world_height: height / 16 * 16, // to round to the nearest 16, not unnecessary
             block_ids_list: vec![],
             chunks: vec![vec![chunks; width / 16]; height / 16],
             chest_locations: vec![],
@@ -77,11 +91,15 @@ impl World {
         let mut image = RgbImage::new(self.world_width as u32, self.world_height as u32);
         for row in 0..self.world_height {
             for col in 0..self.world_width {
-                let block = self.get_block(row, col).unwrap();
-                let rgb = if block.block_id == 0 {
-                    [255, 255, 255]
-                } else {
-                    [255, 255, 255]
+                let block_id = self.get_block(row, col).unwrap().block_id;
+                let rgb = if block_id == 0 {
+                    [30, 125, 214] //air
+                } else if block_id == 1 {
+                    [118, 85, 43] //dirt
+                } else if block_id == 2 {
+                    [120, 115, 102] //stone
+                }else{
+                    [183,176,156]
                 };
                 *image.get_pixel_mut(col as u32, row as u32) = image::Rgb(rgb);
             }
