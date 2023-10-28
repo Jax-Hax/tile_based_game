@@ -1,5 +1,5 @@
 use bevy_ecs::component::Component;
-use glam::{Vec3, Mat4, Vec2};
+use glam::{Vec3, Vec2};
 
 use crate::resources::UpdateInstance;
 

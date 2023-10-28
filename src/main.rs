@@ -1,6 +1,5 @@
-use bevy_ecs::system::{Query, Res, ResMut};
-use glam::{Vec3, Vec2};
-use tile_based_game::{prelude::*, primitives::rect, collision::Box2D};
+use glam::Vec3;
+use tile_based_game::prelude::*;
 use tile_game::terrain::gen;
 mod tile_game{
     pub mod terrain;
@@ -17,49 +16,8 @@ pub async fn run() {
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //add models
     //custom mesh
-    let world = gen(&mut state, 8400, 2400);
-    world.save_to_image("output.png");
+    let world = gen(&mut state, 100, 50);
+    //world.save_to_image("output.png");
     //render loop
-    run_event_loop(state, event_loop);
-}
-fn movement(
-    mut query: Query<(&mut Instance,)>,
-    mut instance_update: ResMut<UpdateInstance>,
-    delta_time: Res<DeltaTime>,
-) {
-    let mut instances = vec![];
-    let mut temp_instance = Instance {
-        ..Default::default()
-    };
-    for (mut instance,) in &mut query {
-        instance.position[0] += 10. * delta_time_to_seconds(delta_time.dt);
-        let instance_raw = instance.to_raw();
-        if instance_raw.is_some() {
-            instances.push(instance_raw.unwrap());
-        }
-        temp_instance = *instance;
-    }
-    temp_instance.update(instances, &mut instance_update);
-}
-fn movement_with_key(
-    mut query: Query<(&mut Instance,)>,
-    mut instance_update: ResMut<UpdateInstance>,
-    delta_time: Res<DeltaTime>,
-    window_events: Res<WindowEvents>,
-) {
-    if window_events.is_key_pressed(VirtualKeyCode::D, None) {
-        let mut instances = vec![];
-        let mut temp_instance = Instance {
-            ..Default::default()
-        };
-        for (mut instance,) in &mut query {
-            instance.position[1] += 50. * delta_time_to_seconds(delta_time.dt);
-            let instance_raw = instance.to_raw();
-            if instance_raw.is_some() {
-                instances.push(instance_raw.unwrap());
-            }
-            temp_instance = *instance;
-        }
-        temp_instance.update(instances, &mut instance_update);
-    }
+    
 }
