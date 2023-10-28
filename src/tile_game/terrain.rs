@@ -1,7 +1,7 @@
 use glam::{Vec3, Vec2};
 use tile_based_game::{material::Material, prelude::Instance, state::State, primitives::rect};
 
-pub fn gen(state: &mut State) -> World {
+pub async fn gen(state: &mut State) -> World {
     let mut world = World {
         world_width: 100,
         world_height: 50,
@@ -10,11 +10,11 @@ pub fn gen(state: &mut State) -> World {
         chest_locations: vec![],
     };
     dirt_pass(&mut world);
-    render_pass(&mut world, state);
+    render_pass(&mut world, state).await;
     world
 }
 fn dirt_pass(world: &mut World) {}
-fn render_pass(world: &mut World, state: &mut State) {
+async fn render_pass(world: &mut World, state: &mut State) {
     let mut row_idx = 0;
     let mut instances = vec![];
     let rows = &world.block_world;
@@ -22,9 +22,9 @@ fn render_pass(world: &mut World, state: &mut State) {
         let mut col_idx = 0;
         for block in col {
             let instance = Instance {
-                position: Vec3::new(row_idx as f32, col_idx as f32, 0.),
+                position: Vec3::new(row_idx as f32, col_idx as f32, 0.), //change to swithc pos
                 ..Default::default()
-            }
+            };
             instances.push(instance);
             println!("{row_idx}, {col_idx}");
             col_idx += 1;
@@ -37,8 +37,8 @@ fn render_pass(world: &mut World, state: &mut State) {
     state.build_mesh(
         vertices,
         indices,
-        instances,
-        state.compile_material("rounded_rect.png").await,
+        instances.iter_mut().map(|instance| instance).collect(),
+        state.compile_material("cube-diffuse.jpg").await,
         false,
     );
 }

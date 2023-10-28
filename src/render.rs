@@ -44,7 +44,7 @@ pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
         render_pass.set_bind_group(1, &state.camera.bind_group, &[]);
         for (_, game_object) in &instance_updater.prefab_slab {
             render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
-
+            println!("test");
             render_pass.set_vertex_buffer(0, game_object.mesh.vertex_buffer.slice(..));
             render_pass.set_index_buffer(
                 game_object.mesh.index_buffer.slice(..),
