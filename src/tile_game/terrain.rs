@@ -1,6 +1,7 @@
-use tile_based_game::material::Material;
+use glam::{Vec3, Vec2};
+use tile_based_game::{material::Material, prelude::Instance, state::State, primitives::rect};
 
-pub fn gen() -> World {
+pub fn gen(state: &mut State) -> World {
     let mut world = World {
         world_width: 100,
         world_height: 50,
@@ -9,9 +10,38 @@ pub fn gen() -> World {
         chest_locations: vec![],
     };
     dirt_pass(&mut world);
+    render_pass(&mut world, state);
     world
 }
 fn dirt_pass(world: &mut World) {}
+fn render_pass(world: &mut World, state: &mut State) {
+    let mut row_idx = 0;
+    let mut instances = vec![];
+    let rows = &world.block_world;
+    for col in rows{
+        let mut col_idx = 0;
+        for block in col {
+            let instance = Instance {
+                position: Vec3::new(row_idx as f32, col_idx as f32, 0.),
+                ..Default::default()
+            }
+            instances.push(instance);
+            println!("{row_idx}, {col_idx}");
+            col_idx += 1;
+        }
+        row_idx += 1;
+    }
+    let p1 = Vec2::new(-0.5, -0.5);
+    let p2 = Vec2::new(0.5, 0.5);
+    let (vertices, indices) = rect(p1,p2);
+    state.build_mesh(
+        vertices,
+        indices,
+        instances,
+        state.compile_material("rounded_rect.png").await,
+        false,
+    );
+}
 #[derive(Clone,Copy)]
 pub struct Block {
     pub block_id: u32,
