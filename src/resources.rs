@@ -16,6 +16,7 @@ pub struct WindowEvents {
     pub left_mouse: MouseClickType,
     pub right_mouse: MouseClickType,
     pub middle_mouse: MouseClickType,
+    pub aspect_ratio: f32,
 }
 pub enum MouseClickType{
     Clicked,
@@ -77,6 +78,9 @@ impl WindowEvents {
     pub fn update_mouse_pos_with_cam(&mut self, camera_transform: &mut Camera){
         let normalized_mouse_pos = self.screen_mouse_pos;
         self.world_mouse_pos = PhysicalPosition::new(normalized_mouse_pos.x + camera_transform.position.x, normalized_mouse_pos.y + camera_transform.position.y);
+    }
+    pub fn update_aspect_ratio(&mut self, width: u32, height: u32) {
+        self.aspect_ratio = (width as f32) /(height as f32);
     }
 }
 #[derive(Resource)]

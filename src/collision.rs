@@ -3,7 +3,7 @@ use winit::dpi::PhysicalPosition;
 
 use bevy_ecs::prelude::*;
 
-use crate::prelude::Instance;
+use crate::{prelude::Instance, resources::WindowEvents};
 
 #[derive(Component)]
 pub struct Box2D {
@@ -23,9 +23,9 @@ impl Box2D {
             enabled: true
         }
     }
-    pub fn check_collision(&self, pos: &PhysicalPosition<f32>, instance: &Instance) -> bool {
-        let x = pos.x + instance.position.x;
-        let y = pos.y + instance.position.y;
+    pub fn check_collision(&self, instance: &Instance, window_events: &WindowEvents) -> bool {
+        let x = window_events.screen_mouse_pos.x + instance.position.x;
+        let y = (window_events.screen_mouse_pos.y + instance.position.y) / window_events.aspect_ratio;
         println!("max: {}, {}", self.x_max, self.y_max);
         println!("min: {}, {}", self.x_min, self.y_min);
         println!("{}, {}", x, y);

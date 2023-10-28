@@ -131,7 +131,7 @@ impl State {
             prefab_slab: Slab::new(),
         });
         world.insert_resource(DeltaTime { dt: Duration::ZERO });
-        world.insert_resource(WindowEvents { keys_pressed: vec![], screen_mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 }, world_mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 },left_mouse: MouseClickType::NotHeld, right_mouse: MouseClickType::NotHeld, middle_mouse: MouseClickType::NotHeld });
+        world.insert_resource(WindowEvents { keys_pressed: vec![], screen_mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 }, world_mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 },left_mouse: MouseClickType::NotHeld, right_mouse: MouseClickType::NotHeld, middle_mouse: MouseClickType::NotHeld, aspect_ratio: (config.width as f32)/(config.height as f32) });
         let schedule = Schedule::default();
         (
             
@@ -158,6 +158,10 @@ impl State {
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
             self.camera.camera_uniform.update_screen_size(new_size.width,new_size.height);
+            self.world
+                    .get_resource_mut::<WindowEvents>()
+                    .unwrap()
+                    .update_aspect_ratio(new_size.width, new_size.height);
             self.window.size = new_size;
             self.config.width = new_size.width;
             self.config.height = new_size.height;
