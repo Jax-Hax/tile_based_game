@@ -1,40 +1,64 @@
-use glam::{Vec2, Vec3};
-use tile_based_game::{state, prelude::{Instance, run_event_loop}, resources::MousePos};
-use {
-    tile_based_game::camera::{Camera},
-    tile_based_game::collision::Box2D,
-    tile_based_game::prelude::*,
-    tile_based_game::primitives::rect,
-};
-use bevy_ecs::prelude::*;
+use bevy_ecs::system::{Query, Res, ResMut};
+use glam::{Vec3, Vec2};
+use tile_based_game::{prelude::*, primitives::rect, collision::Box2D};
+use tile_game::terrain::gen;
+mod tile_game{
+    pub mod terrain;
+}
 fn main() {
     pollster::block_on(run());
 }
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {
     let camera = Camera::new(
-        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 0.0)
     );
     // State::new uses async code, so we're going to wait for it to finish
-    let (mut state, event_loop) = state::State::new(false, env!("OUT_DIR"), camera, 5.0, 2.0).await;
+    let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
+    //add models
     //custom mesh
-    let p1 = Vec2::new(-0.5, -0.5);
-    let p2 = Vec2::new(0.5, 0.5);
-    let (vertices, indices) = rect(p1,p2);
-    let collider = Box2D::new(p1,p2);
-    let mut instance = Instance {position: Vec3::new(2.0,1.0,0.0), ..Default::default()};
-    let mut instance2 = Instance {position: Vec3::new(1.0,1.0,0.0), ..Default::default()};
-    let mut instances = vec![];
-    instances.push(&mut instance);
-    instances.push(&mut instance2);
-    state.build_mesh(
-        vertices,
-        indices,
-        instances,
-        state.compile_material("rounded_rect.png").await,
-        false,
-    );
-    state.world.spawn((instance, collider));
+    gen(&mut state).await;
     //render loop
     run_event_loop(state, event_loop);
+}
+fn movement(
+    mut query: Query<(&mut Instance,)>,
+    mut instance_update: ResMut<UpdateInstance>,
+    delta_time: Res<DeltaTime>,
+) {
+    let mut instances = vec![];
+    let mut temp_instance = Instance {
+        ..Default::default()
+    };
+    for (mut instance,) in &mut query {
+        instance.position[0] += 10. * delta_time_to_seconds(delta_time.dt);
+        let instance_raw = instance.to_raw();
+        if instance_raw.is_some() {
+            instances.push(instance_raw.unwrap());
+        }
+        temp_instance = *instance;
+    }
+    temp_instance.update(instances, &mut instance_update);
+}
+fn movement_with_key(
+    mut query: Query<(&mut Instance,)>,
+    mut instance_update: ResMut<UpdateInstance>,
+    delta_time: Res<DeltaTime>,
+    window_events: Res<WindowEvents>,
+) {
+    if window_events.is_key_pressed(VirtualKeyCode::D, None) {
+        let mut instances = vec![];
+        let mut temp_instance = Instance {
+            ..Default::default()
+        };
+        for (mut instance,) in &mut query {
+            instance.position[1] += 50. * delta_time_to_seconds(delta_time.dt);
+            let instance_raw = instance.to_raw();
+            if instance_raw.is_some() {
+                instances.push(instance_raw.unwrap());
+            }
+            temp_instance = *instance;
+        }
+        temp_instance.update(instances, &mut instance_update);
+    }
 }
