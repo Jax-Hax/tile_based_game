@@ -2,7 +2,7 @@ use bevy_ecs::system::Resource;
 use slab::Slab;
 use winit::{dpi::PhysicalPosition, event::{VirtualKeyCode, ElementState}};
 
-use crate::prefabs::Prefab;
+use crate::{prefabs::Prefab, state::State, camera::Camera};
 #[derive(Resource)]
 pub struct UpdateInstance {
     pub queue: wgpu::Queue,
@@ -11,7 +11,8 @@ pub struct UpdateInstance {
 #[derive(Resource)]
 pub struct WindowEvents {
     pub keys_pressed: Vec<(VirtualKeyCode, ElementState)>,
-    pub mouse_pos: PhysicalPosition<f32>,
+    pub screen_mouse_pos: PhysicalPosition<f32>,
+    pub world_mouse_pos: PhysicalPosition<f32>,
     pub left_mouse: MouseClickType,
     pub right_mouse: MouseClickType,
     pub middle_mouse: MouseClickType,
@@ -68,6 +69,14 @@ impl WindowEvents {
             MouseClickType::Released => self.left_mouse = MouseClickType::NotHeld,
             _ => {}
         }
+    }
+    pub fn update_mouse_pos(&mut self, normalized_mouse_pos: PhysicalPosition<f32>, camera_transform: &mut Camera){
+        self.screen_mouse_pos = normalized_mouse_pos;
+        self.world_mouse_pos = PhysicalPosition::new(normalized_mouse_pos.x + camera_transform.position.x, normalized_mouse_pos.y + camera_transform.position.y);
+    }
+    pub fn update_mouse_pos_with_cam(&mut self, camera_transform: &mut Camera){
+        let normalized_mouse_pos = self.screen_mouse_pos;
+        self.world_mouse_pos = PhysicalPosition::new(normalized_mouse_pos.x + camera_transform.position.x, normalized_mouse_pos.y + camera_transform.position.y);
     }
 }
 #[derive(Resource)]

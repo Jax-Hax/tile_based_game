@@ -3,6 +3,8 @@ use winit::dpi::PhysicalPosition;
 
 use bevy_ecs::prelude::*;
 
+use crate::prelude::Instance;
+
 #[derive(Component)]
 pub struct Box2D {
     x_max: f32,
@@ -21,12 +23,14 @@ impl Box2D {
             enabled: true
         }
     }
-    pub fn check_collision(&self, pos: &PhysicalPosition<f32>) -> bool {
-        let x = pos.x;
-        let y = pos.y;
+    pub fn check_collision(&self, pos: &PhysicalPosition<f32>, instance: &Instance) -> bool {
+        let x = pos.x + instance.position.x;
+        let y = pos.y + instance.position.y;
+        println!("max: {}, {}", self.x_max, self.y_max);
+        println!("min: {}, {}", self.x_min, self.y_min);
+        println!("{}, {}", x, y);
         if self.enabled{
             if x < self.x_max && x > self.x_min && y < self.y_max && y > self.y_min {
-                println!("collision");
                 return true;
             }
         }
@@ -57,7 +61,6 @@ impl Circle {
         let dist_y = (y - self.center_y).powi(2);
         let dist = (dist_x + dist_y).sqrt();
         if self.enabled && dist < self.radius {
-            println!("collision");
             return true;
         }
         return false;

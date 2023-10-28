@@ -131,7 +131,7 @@ impl State {
             prefab_slab: Slab::new(),
         });
         world.insert_resource(DeltaTime { dt: Duration::ZERO });
-        world.insert_resource(WindowEvents { keys_pressed: vec![], mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 }, left_mouse: MouseClickType::NotHeld, right_mouse: MouseClickType::NotHeld, middle_mouse: MouseClickType::NotHeld });
+        world.insert_resource(WindowEvents { keys_pressed: vec![], screen_mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 }, world_mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 },left_mouse: MouseClickType::NotHeld, right_mouse: MouseClickType::NotHeld, middle_mouse: MouseClickType::NotHeld });
         let schedule = Schedule::default();
         (
             
