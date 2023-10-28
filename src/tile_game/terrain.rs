@@ -7,9 +7,7 @@ pub fn gen(state: &mut State, width: usize, height: usize) -> World {
     dirt_pass(&mut world);
     world
 }
-fn dirt_pass(world: &mut World) {
-    
-}
+fn dirt_pass(world: &mut World) {}
 async fn render_chunk(chunk: &mut Chunk, state: &mut State) {
     let mut row_idx = 0;
     let mut instances = vec![];
@@ -56,10 +54,10 @@ impl World {
             rows: [[Block { block_id: 0 }; 16]; 16],
         };
         World {
-            world_width: width/16*16,
-            world_height: height/16*16,
+            world_width: width / 16 * 16,
+            world_height: height / 16 * 16,
             block_ids_list: vec![],
-            chunks: vec![vec![chunks; width/16]; height/16],
+            chunks: vec![vec![chunks; width / 16]; height / 16],
             chest_locations: vec![],
         }
     }
@@ -77,17 +75,15 @@ impl World {
     }
     pub fn save_to_image(&mut self, image_loc: &str) {
         let mut image = RgbImage::new(self.world_width as u32, self.world_height as u32);
-        for row in 0..self.world_height{
+        for row in 0..self.world_height {
             for col in 0..self.world_width {
-                let block = self.get_block(row, col);
-                match block{
-                    None => {println!("{}, {}", row, col)}
-                    Some(block) => {let rgb = if block.block_id == 0 {
-                        [255, 255, 255]
-                    } else {[255, 255, 255]};
-                    *image.get_pixel_mut(col as u32,row as u32) = image::Rgb(rgb);}
-                }
-                
+                let block = self.get_block(row, col).unwrap();
+                let rgb = if block.block_id == 0 {
+                    [255, 255, 255]
+                } else {
+                    [255, 255, 255]
+                };
+                *image.get_pixel_mut(col as u32, row as u32) = image::Rgb(rgb);
             }
         }
         image.save(image_loc).unwrap();
