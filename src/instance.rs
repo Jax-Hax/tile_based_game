@@ -34,14 +34,14 @@ impl Instance {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct InstanceRaw {
-    model: [[f32; 4]; 4],
+    position: [f32; 3],
     is_world_space: u32,
 }
 
 impl InstanceRaw {
     pub fn new(position: Vec3, is_world_space: bool) -> Self {
         Self {
-            model: Mat4::from_translation(position).to_cols_array_2d(),
+            position: position.to_array(),
             is_world_space: if is_world_space { 0 } else { 1 },
         }
     }
@@ -59,10 +59,10 @@ impl InstanceRaw {
                     // While our vertex shader only uses locations 0, and 1 now, in later tutorials we'll
                     // be using 2, 3, and 4, for Vertex. We'll start at slot 5 not conflict with them later
                     shader_location: 5,
-                    format: wgpu::VertexFormat::Float32x4,
+                    format: wgpu::VertexFormat::Float32x3,
                 },
                 wgpu::VertexAttribute {
-                    offset: mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
+                    offset: mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 6,
                     format: wgpu::VertexFormat::Uint32,
                 },
