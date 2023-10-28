@@ -1,26 +1,14 @@
 use glam::{Vec2, Vec3};
 use image::RgbImage;
+use noise::Perlin;
 use tile_based_game::{material::Material, prelude::Instance, primitives::rect, state::State};
 
-pub fn gen(state: &mut State, width: usize, height: usize) -> World {
+use super::terrain_passes::dirt_pass;
+pub fn gen(width: usize, height: usize, seed: u32) -> World {
     let mut world = World::new(width, height);
-    dirt_pass(&mut world);
+    let perlin = Perlin::new(seed);
+    dirt_pass(&mut world, perlin);
     world
-}
-fn dirt_pass(world: &mut World) {
-    for row in 0..world.world_height {
-        for col in 0..world.world_width {
-            let block = world.get_block(row, col).unwrap();
-            if row < 50{
-                block.block_id = 0;
-            } else if row < 100 {
-                block.block_id = 1
-            }
-            else {
-                block.block_id = 2;
-            }
-        }
-    }
 }
 async fn render_chunk(chunk: &mut Chunk, state: &mut State) {
     let mut row_idx = 0;
