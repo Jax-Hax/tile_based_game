@@ -14,6 +14,7 @@ pub fn gen(width: usize, height: usize, seed: u32, sprite_map_idx: usize) -> Wor
 pub fn chunk_render_checker(mut world: ResMut<World>, player: Res<Player>, mut asset_server: ResMut<AssetServer>) {
     let mut col_idx: u32 = 0;
     let (player_x, player_y) = player.block_position();
+    let sprite_sheet_idx = world.sprite_map_idx;
     for chunk_col in &mut world.chunks { //TODO: Change this to be only chunks near the player for efficiency
         let mut row_idx: u32 = 0;
         for chunk in chunk_col {
@@ -27,7 +28,7 @@ pub fn chunk_render_checker(mut world: ResMut<World>, player: Res<Player>, mut a
             else{
                 if x_dif < 17 && y_dif < 17 {
                     chunk.rendered = true;
-                    render_chunk(chunk, &mut asset_server);
+                    render_chunk(chunk, &mut asset_server, sprite_sheet_idx);
                 }
             }
             row_idx += 1;
@@ -35,7 +36,7 @@ pub fn chunk_render_checker(mut world: ResMut<World>, player: Res<Player>, mut a
         col_idx += 1;
     }
 }
-fn render_chunk(chunk: &mut Chunk, asset_server: &mut AssetServer) {
+fn render_chunk(chunk: &mut Chunk, asset_server: &mut AssetServer, sprite_sheet_idx: usize) {
     let mut row_idx = 0;
     let mut instances = vec![];
     let block_size = 0.2;
@@ -60,6 +61,7 @@ fn render_chunk(chunk: &mut Chunk, asset_server: &mut AssetServer) {
         vertices,
         indices,
         instances,
+        sprite_sheet_idx,
         false,
     );
 }
