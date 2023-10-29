@@ -30,7 +30,9 @@ impl Instance {
         self.position
     }
 }
-
+/*pub trait Instance {
+    fn summarize(&self) -> String;
+}*/
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct InstanceRaw {

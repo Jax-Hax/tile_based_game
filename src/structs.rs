@@ -5,12 +5,11 @@ use winit::{
     event::{ElementState, MouseScrollDelta, VirtualKeyCode},
 };
 
-use crate::material::Material;
 pub struct Mesh {
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
     pub num_elements: u32,
-    pub material: Material,
+    pub material_idx: usize,
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]

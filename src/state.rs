@@ -252,7 +252,7 @@ impl State {
         vertices: Vec<Vertex>,
         indices: Vec<u32>,
         instances: Vec<&mut Instance>,
-        material: Material,
+        material_idx: usize,
         is_updating: bool,
     ) {
         let vertex_buffer = self
@@ -273,7 +273,7 @@ impl State {
             vertex_buffer,
             index_buffer,
             num_elements: indices.len() as u32,
-            material,
+            material_idx,
         };
         let mut instance_data = vec![];
         let mut length = 0;
@@ -308,10 +308,72 @@ impl State {
         }
         entry.insert(container);
     }
+    pub fn build_mesh_internal<T: Component>(
+        &mut self,
+        vertices: Vec<Vertex>,
+        indices: Vec<u32>,
+        instances: Vec<(Instance,T)>,
+        material_idx: usize,
+        is_updating: bool,
+    ) {
+        let vertex_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: bytemuck::cast_slice(&vertices),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+        let index_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Index Buffer"),
+                contents: bytemuck::cast_slice(&indices),
+                usage: wgpu::BufferUsages::INDEX,
+            });
+        let mesh = Mesh {
+            vertex_buffer,
+            index_buffer,
+            num_elements: indices.len() as u32,
+            material_idx,
+        };
+        let mut instance_data = vec![];
+        let mut length = 0;
+        for (instance,_) in &instances {
+            let instance_raw = instance.to_raw();
+            if instance_raw.is_some() {
+                instance_data.push(instance_raw.unwrap());
+                length += 1;
+            }
+        }
+        let instance_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Instance Buffer"),
+                contents: bytemuck::cast_slice(&instance_data),
+                usage: if is_updating {
+                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
+                } else {
+                    wgpu::BufferUsages::VERTEX
+                },
+            });
+        let container = Prefab::new(
+            instance_buffer,
+            mesh,
+            length,
+        );
+        let mut update_instance = self.world.get_resource_mut::<UpdateInstance>().unwrap();
+        let entry = update_instance.prefab_slab.vacant_entry();
+        let key = entry.key();
+        for (mut instance,_) in instances {
+            instance.prefab_index = key;
+        }
+        entry.insert(container);
+        self.world.spawn_batch(instances);
+    }
     pub fn make_sprites(
         &mut self,
         instances: Vec<&mut Instance>,
-        material: Material,
+        material_idx: usize,
         is_updating: bool
     ) {
         //make sprite mesh
@@ -331,7 +393,7 @@ impl State {
             
         let mesh = Mesh {
             vertex_buffer,index_buffer, num_elements: indices.len() as u32,
-            material,
+            material_idx,
         };
         let mut instance_data = vec![];
         let mut length = 0;
