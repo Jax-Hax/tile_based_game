@@ -2,7 +2,7 @@ use bevy_ecs::system::{Query, Resource, Res, ResMut};
 use glam::{Vec2, Vec3};
 use image::RgbImage;
 use noise::{Perlin, permutationtable::PermutationTable};
-use tile_based_game::{material::Material, prelude::Instance, primitives::rect, state::State};
+use tile_based_game::{material::Material, prelude::Instance, primitives::rect, state::State, assets::AssetServer};
 
 use super::{terrain_passes::basic_caves_pass, player::Player};
 pub fn gen(width: usize, height: usize, seed: u32) -> World {
@@ -11,7 +11,7 @@ pub fn gen(width: usize, height: usize, seed: u32) -> World {
     basic_caves_pass(&mut world, &hasher);
     world
 }
-pub fn chunk_render_checker(world: ResMut<World>, player: Res<Player>) {
+pub fn chunk_render_checker(mut world: ResMut<World>, player: Res<Player>, mut asset_server: ResMut<AssetServer>) {
     let mut col_idx: u32 = 0;
     let (player_x, player_y) = player.block_position();
     for chunk_col in &mut world.chunks { //TODO: Change this to be only chunks near the player for efficiency
@@ -27,7 +27,7 @@ pub fn chunk_render_checker(world: ResMut<World>, player: Res<Player>) {
             else{
                 if x_dif < 17 && y_dif < 17 {
                     chunk.rendered = true;
-                    render_chunk(chunk, state) //SEPERATE WORLD AND SCHEDULE FROM STATE THEN MAKE STATE A RESOURCE SO YOU CAN BUILD MESHES IN RUNTIME
+                    render_chunk(chunk, &mut asset_server); //SEPERATE WORLD AND SCHEDULE FROM STATE THEN MAKE STATE A RESOURCE SO YOU CAN BUILD MESHES IN RUNTIME
                 }
             }
             row_idx += 1;
@@ -35,7 +35,7 @@ pub fn chunk_render_checker(world: ResMut<World>, player: Res<Player>) {
         col_idx += 1;
     }
 }
-async fn render_chunk(chunk: &mut Chunk, state: &mut State) {
+fn render_chunk(chunk: &mut Chunk, asset_server: &mut AssetServer) {
     let mut row_idx = 0;
     let mut instances = vec![];
     let block_size = 0.2;
@@ -56,11 +56,11 @@ async fn render_chunk(chunk: &mut Chunk, state: &mut State) {
     let p1 = Vec2::new(-block_size_halfed, -block_size_halfed);
     let p2 = Vec2::new(block_size_halfed, block_size_halfed);
     let (vertices, indices) = rect(p1, p2);
-    state.build_mesh(
+    asset_server.queue_mesh(
         vertices,
         indices,
         instances.iter_mut().map(|instance| instance).collect(),
-        state.compile_material("cube-diffuse.jpg").await,
+        asset_server.queue_material("cube-diffuse.jpg"),
         false,
     );
 }
