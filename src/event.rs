@@ -1,3 +1,4 @@
+use bevy_ecs::{schedule::Schedule, world::World};
 use instant::Duration;
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
 
@@ -5,7 +6,7 @@ use crate::{state::State, render::render, resources::{WindowEvents, DeltaTime}, 
 
 pub fn run_event_loop(
     mut state: State,
-    event_loop: EventLoop<()>,
+    event_loop: EventLoop<()>, mut world: World, mut schedule: Schedule
 ) {
     let mut last_render_time = instant::Instant::now();
     
@@ -16,14 +17,14 @@ pub fn run_event_loop(
             Event::DeviceEvent {
                 event: DeviceEvent::MouseMotion{ delta, },
                 .. // We're not using device_id currently
-            } => if state.world.get_resource_mut::<WindowEvents>().unwrap().left_held() || state.mouse_locked {
+            } => if world.get_resource_mut::<WindowEvents>().unwrap().left_held() || state.mouse_locked {
                 state.camera.camera_controller.process_mouse(delta.0, delta.1)
             }
             Event::WindowEvent {
                 ref event,
                 window_id,
             } if window_id == state.window().id() => {
-                state.input(event);
+                state.input(event, &mut world.get_resource_mut::<WindowEvents>().unwrap());
                 match event {
                     #[cfg(not(target_arch="wasm32"))]
                     WindowEvent::CloseRequested
@@ -37,14 +38,13 @@ pub fn run_event_loop(
                         ..
                     } => *control_flow = ControlFlow::Exit,
                     WindowEvent::CursorMoved { position, .. } => {
-                        let mut mouse_pos = state.world.get_resource_mut::<WindowEvents>().unwrap();
-                        mouse_pos.update_mouse_pos(state.window.normalize_position(position), &mut state.camera.camera_transform);
+                        world.get_resource_mut::<WindowEvents>().unwrap().update_mouse_pos(state.window.normalize_position(position), &mut state.camera.camera_transform);
                     }
                     WindowEvent::Resized(physical_size) => {
-                        state.resize(*physical_size);
+                        state.resize(*physical_size,&mut world.get_resource_mut::<WindowEvents>().unwrap());
                     }
                     WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                        state.resize(**new_inner_size);
+                        state.resize(**new_inner_size,&mut world.get_resource_mut::<WindowEvents>().unwrap());
                     }
                     _ => {}
                 }
@@ -53,16 +53,16 @@ pub fn run_event_loop(
                 let now = instant::Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
-                let mut delta_time = state.world.get_resource_mut::<DeltaTime>().unwrap();
+                let mut delta_time = world.get_resource_mut::<DeltaTime>().unwrap();
                 delta_time.dt = dt;
-                default_cam(&mut state, dt);
-                state.update();
-                state.schedule.run(&mut state.world);
-                state.world.get_resource_mut::<WindowEvents>().unwrap().next_frame();
-                match render(&mut state) {
+                default_cam(&mut state, dt, &mut world.get_resource_mut::<WindowEvents>().unwrap());
+                state.update(&mut world);
+                schedule.run(&mut world);
+                world.get_resource_mut::<WindowEvents>().unwrap().next_frame();
+                match render(&mut state, &mut world) {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated
-                    Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => state.resize(state.window.size),
+                    Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => state.resize(state.window.size,&mut world.get_resource_mut::<WindowEvents>().unwrap()),
                     // The system is out of memory, we should probably quit
                     Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
                     // We're ignoring timeouts

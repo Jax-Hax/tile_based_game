@@ -28,8 +28,6 @@ pub struct State {
     pub texture_bind_group_layout: wgpu::BindGroupLayout,
     pub mouse_locked: bool,
     build_path: String,
-    pub world: World,
-    pub schedule: Schedule,
 }
 
 impl State {
@@ -39,7 +37,7 @@ impl State {
         cam: Camera,
         speed: f32,
         sensitivity: f32,
-    ) -> (Self, EventLoop<()>) {
+    ) -> (Self, EventLoop<()>, World, Schedule) {
         let (window, event_loop) = window::Window::new(mouse_lock).await;
         let (device, queue) = window
             .adapter
@@ -145,22 +143,20 @@ impl State {
                 texture_bind_group_layout,
                 mouse_locked: mouse_lock,
                 build_path: build_path.to_string(),
-                world,
-                schedule,
             },
             event_loop,
+            world,
+            schedule,
         )
     }
     pub fn window(&self) -> &Window {
         &self.window.window
     }
 
-    pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+    pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>, window_events: &mut WindowEvents) {
         if new_size.width > 0 && new_size.height > 0 {
             self.camera.camera_uniform.update_screen_size(new_size.width,new_size.height);
-            self.world
-                    .get_resource_mut::<WindowEvents>()
-                    .unwrap()
+            window_events
                     .update_aspect_ratio(new_size.width, new_size.height);
             self.window.size = new_size;
             self.config.width = new_size.width;
@@ -170,7 +166,7 @@ impl State {
                 texture::Texture::create_depth_texture(&self.device, &self.config, "depth_texture");
         }
     }
-    pub fn input(&mut self, event: &WindowEvent) -> bool {
+    pub fn input(&mut self, event: &WindowEvent, window_events: &mut WindowEvents) -> bool {
         match event {
             WindowEvent::KeyboardInput {
                 input:
@@ -182,9 +178,7 @@ impl State {
                 ..
             } => {
                 let key_pressed = (*key, *state);
-                self.world
-                    .get_resource_mut::<WindowEvents>()
-                    .unwrap()
+                window_events
                     .keys_pressed
                     .push(key_pressed);
                 self.camera.camera_controller.process_keyboard(*key, *state)
@@ -198,13 +192,10 @@ impl State {
                 state,
                 ..
             } => {
-                let mut events = self.world
-                    .get_resource_mut::<WindowEvents>()
-                    .unwrap();
                 match button {
-                    MouseButton::Left => events.left_mouse = if *state == ElementState::Pressed {MouseClickType::Clicked} else {MouseClickType::Released},
-                    MouseButton::Right => events.right_mouse = if *state == ElementState::Pressed {MouseClickType::Clicked} else {MouseClickType::Released},
-                    MouseButton::Middle => events.middle_mouse = if *state == ElementState::Pressed {MouseClickType::Clicked} else {MouseClickType::Released},
+                    MouseButton::Left => window_events.left_mouse = if *state == ElementState::Pressed {MouseClickType::Clicked} else {MouseClickType::Released},
+                    MouseButton::Right => window_events.right_mouse = if *state == ElementState::Pressed {MouseClickType::Clicked} else {MouseClickType::Released},
+                    MouseButton::Middle => window_events.middle_mouse = if *state == ElementState::Pressed {MouseClickType::Clicked} else {MouseClickType::Released},
                     _ => {}
                 }
                 true
@@ -212,19 +203,19 @@ impl State {
             _ => false,
         }
     }
-    pub fn update(&mut self) {
+    pub fn update(&mut self, world: &mut World) {
         self.camera
             .camera_uniform
             .update_view_proj(&self.camera.camera_transform);
-        let queue = self.world.get_resource_mut::<UpdateInstance>().unwrap();
+        let queue = world.get_resource_mut::<UpdateInstance>().unwrap();
         queue.queue.write_buffer(
             &self.camera.buffer,
             0,
             bytemuck::cast_slice(&[self.camera.camera_uniform]),
         );
     }
-    pub async fn compile_material(&self, texture_name: &str) -> Material {
-        let queue = self.world.get_resource::<UpdateInstance>().unwrap();
+    pub async fn compile_material(&self, texture_name: &str, world: &mut World) -> Material {
+        let queue = world.get_resource::<UpdateInstance>().unwrap();
         let diffuse_texture =
             load_texture(texture_name, &self.build_path, &self.device, &queue.queue)
                 .await
@@ -254,6 +245,7 @@ impl State {
         instances: Vec<&mut Instance>,
         material: Material,
         is_updating: bool,
+        world: &mut World,
     ) {
         let vertex_buffer = self
             .device
@@ -300,7 +292,7 @@ impl State {
             mesh,
             length,
         );
-        let mut update_instance = self.world.get_resource_mut::<UpdateInstance>().unwrap();
+        let mut update_instance = world.get_resource_mut::<UpdateInstance>().unwrap();
         let entry = update_instance.prefab_slab.vacant_entry();
         let key = entry.key();
         for instance in instances {
@@ -312,7 +304,8 @@ impl State {
         &mut self,
         instances: Vec<&mut Instance>,
         material: Material,
-        is_updating: bool
+        is_updating: bool,
+        world: &mut World,
     ) {
         //make sprite mesh
         let (vertices, indices) = rect(Vec2::new(0.5,0.5), Vec2::new(-0.5,-0.5));
@@ -358,7 +351,7 @@ impl State {
             mesh,
             length,
         );
-        let mut update_instance = self.world.get_resource_mut::<UpdateInstance>().unwrap();
+        let mut update_instance = world.get_resource_mut::<UpdateInstance>().unwrap();
         let entry = update_instance.prefab_slab.vacant_entry();
         let key = entry.key();
         for instance in instances {

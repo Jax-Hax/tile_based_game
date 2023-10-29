@@ -16,17 +16,17 @@ pub async fn run() {
         Vec3::new(0.0, 0.0, 0.0)
     );
     // State::new uses async code, so we're going to wait for it to finish
-    let (mut state, event_loop) = State::new(false, env!("OUT_DIR"), camera, 5.0, 2.0).await;
+    let (mut state, event_loop, world, schedule) = State::new(false, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //add models
     //custom mesh
-    let mut world = gen(1000, 500, 1);
-    world.save_to_image("output.png");
-    state.world.insert_resource(world);
-    state.schedule.add_systems(chunk_render_checker);
+    let mut terrain_world = gen(1000, 500, 1);
+    terrain_world.save_to_image("output.png");
+    world.insert_resource(terrain_world);
+    schedule.add_systems(chunk_render_checker);
     //render loop
     
     gen_new_world_btn(&mut state).await;
     
     
-    run_event_loop(state, event_loop);
+    run_event_loop(state, event_loop, world, schedule);
 }

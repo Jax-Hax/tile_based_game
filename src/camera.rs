@@ -89,13 +89,12 @@ impl Camera {
     }
 }
 
-pub fn default_cam(state: &mut State, dt: Duration) {
+pub fn default_cam(state: &mut State, dt: Duration, window_events: &mut WindowEvents) {
     let dt = dt.as_secs_f32();
     let mut camera = &mut state.camera.camera_transform;
     let controller = &mut state.camera.camera_controller;
     // Move left/right and up/down
     camera.position.x += (controller.amount_right - controller.amount_left) * controller.speed * dt;
     camera.position.y += (controller.amount_up - controller.amount_down) * controller.speed * dt;
-    let mut mouse_pos = state.world.get_resource_mut::<WindowEvents>().unwrap();
-    mouse_pos.update_mouse_pos_with_cam(&mut camera);
+    window_events.update_mouse_pos_with_cam(&mut camera);
 }
