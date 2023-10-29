@@ -1,12 +1,10 @@
 use std::iter;
 
-use bevy_ecs::world::World;
-
 use crate::{resources::UpdateInstance, state::State};
 
-pub fn render(state: &mut State, world: &mut World) -> Result<(), wgpu::SurfaceError> {
+pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
     let output = state.window.surface.get_current_texture()?;
-    let instance_updater = world.get_resource::<UpdateInstance>().unwrap();
+    let instance_updater = state.world.get_resource::<UpdateInstance>().unwrap();
     let view = output
         .texture
         .create_view(&wgpu::TextureViewDescriptor::default());
