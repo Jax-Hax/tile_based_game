@@ -24,7 +24,7 @@ pub fn basic_caves_pass(world: &mut World, hasher: &PermutationTable) {
                 //check if cave
                 let cave_val = noise_2d_zero_to_one(hasher, col,row, 25.);
                 print!("{}",cave_val);
-                if cave_val > 0.1 {
+                if cave_val > 0.1 { //TODO: ADD FRACTAL NOISE, ADD MULTIPLE SMALLER LAYERS OF NOISE FOR REFINED DETAILS
                     block.block_id = 0;
                 }
             }

@@ -6,7 +6,6 @@ pub struct Prefab {
     pub length: u32,
     pub buffer: Buffer,
     pub mesh: Mesh,
-    pub is_changed: bool, //set each time an instance is changed and it is remade at end of frame
 }
 impl Prefab {
     pub fn new(buffer: Buffer, mesh: Mesh, length: u32) -> Self {
@@ -14,7 +13,6 @@ impl Prefab {
             buffer,
             mesh,
             length,
-            is_changed: false,
         }
     }
     pub fn update_buffer(&mut self, instances: Vec<InstanceRaw>, queue: &Queue) {
