@@ -57,6 +57,7 @@ pub fn run_event_loop(
                 delta_time.dt = dt;
                 default_cam(&mut state, dt, &mut world.get_resource_mut::<WindowEvents>().unwrap());
                 state.update(&mut world);
+                world.insert_resource(state);
                 schedule.run(&mut world);
                 world.get_resource_mut::<WindowEvents>().unwrap().next_frame();
                 match render(&mut state, &mut world) {

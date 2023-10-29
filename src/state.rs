@@ -18,6 +18,7 @@ use winit::{
     event_loop::EventLoop,
     window::Window,
 };
+#[derive(Resource)]
 pub struct State {
     pub device: wgpu::Device,
     pub config: wgpu::SurfaceConfiguration,

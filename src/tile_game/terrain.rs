@@ -11,7 +11,7 @@ pub fn gen(width: usize, height: usize, seed: u32) -> World {
     basic_caves_pass(&mut world, &hasher);
     world
 }
-pub fn chunk_render_checker(mut commands: Commands, terrain_world: ResMut<World>, player: Res<Player>) {
+pub async fn chunk_render_checker(mut commands: Commands<'_, '_>, terrain_world: ResMut<'_, World>, player: Res<'_, Player>, state: ResMut<'_, State>) {
     let mut col_idx: u32 = 0;
     let (player_x, player_y) = player.block_position();
     for chunk_col in &mut terrain_world.chunks { //TODO: Change this to be only chunks near the player for efficiency
