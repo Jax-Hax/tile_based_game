@@ -1,13 +1,13 @@
 use glam::{Vec2, Vec3};
 use image::RgbImage;
-use noise::Perlin;
+use noise::{Perlin, permutationtable::PermutationTable};
 use tile_based_game::{material::Material, prelude::Instance, primitives::rect, state::State};
 
-use super::terrain_passes::dirt_pass;
+use super::terrain_passes::basic_caves_pass;
 pub fn gen(width: usize, height: usize, seed: u32) -> World {
     let mut world = World::new(width, height);
-    let perlin = Perlin::new(seed);
-    dirt_pass(&mut world, perlin);
+    let hasher = PermutationTable::new(seed);
+    basic_caves_pass(&mut world, &hasher);
     world
 }
 async fn render_chunk(chunk: &mut Chunk, state: &mut State) {
