@@ -5,8 +5,8 @@ use noise::{Perlin, permutationtable::PermutationTable};
 use tile_based_game::{material::Material, prelude::Instance, primitives::rect, state::State, assets::AssetServer};
 
 use super::{terrain_passes::basic_caves_pass, player::Player};
-pub fn gen(width: usize, height: usize, seed: u32) -> World {
-    let mut world = World::new(width, height);
+pub fn gen(width: usize, height: usize, seed: u32, sprite_map_idx: usize) -> World {
+    let mut world = World::new(width, height, sprite_map_idx);
     let hasher = PermutationTable::new(seed);
     basic_caves_pass(&mut world, &hasher);
     world
@@ -27,7 +27,7 @@ pub fn chunk_render_checker(mut world: ResMut<World>, player: Res<Player>, mut a
             else{
                 if x_dif < 17 && y_dif < 17 {
                     chunk.rendered = true;
-                    render_chunk(chunk, &mut asset_server); //SEPERATE WORLD AND SCHEDULE FROM STATE THEN MAKE STATE A RESOURCE SO YOU CAN BUILD MESHES IN RUNTIME
+                    render_chunk(chunk, &mut asset_server);
                 }
             }
             row_idx += 1;
@@ -59,8 +59,7 @@ fn render_chunk(chunk: &mut Chunk, asset_server: &mut AssetServer) {
     asset_server.queue_mesh(
         vertices,
         indices,
-        instances.iter_mut().map(|instance| instance).collect(),
-        asset_server.queue_material("cube-diffuse.jpg"),
+        instances,
         false,
     );
 }
@@ -75,9 +74,10 @@ pub struct World {
     pub block_ids_list: Vec<BlockType>,
     pub chunks: Vec<Vec<Chunk>>, //each row contains columns
     pub chest_locations: Vec<Chest>,
+    pub sprite_map_idx: usize,
 }
 impl World {
-    pub fn new(width: usize, height: usize) -> Self {
+    pub fn new(width: usize, height: usize, sprite_map_idx: usize) -> Self {
         let chunks = Chunk {
             rows: [[Block { block_id: 0 }; 16]; 16],
             rendered: false,
@@ -88,6 +88,7 @@ impl World {
             block_ids_list: vec![],
             chunks: vec![vec![chunks; width / 16]; height / 16],
             chest_locations: vec![],
+            sprite_map_idx
         }
     }
     pub fn get_block(&mut self, row: usize, col: usize) -> Option<&mut Block> {
