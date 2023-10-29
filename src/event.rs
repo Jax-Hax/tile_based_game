@@ -3,7 +3,7 @@ use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, Wi
 
 use crate::{state::State, render::render, resources::{WindowEvents, DeltaTime}, camera::default_cam};
 
-pub fn run_event_loop(
+pub fn run_event_loop<T: bevy_ecs::component::Component>(
     mut state: State,
     event_loop: EventLoop<()>,
 ) {
@@ -59,7 +59,7 @@ pub fn run_event_loop(
                 state.update();
                 state.schedule.run(&mut state.world);
                 state.world.get_resource_mut::<WindowEvents>().unwrap().next_frame();
-                match render(&mut state) {
+                match render::<T>(&mut state) {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated
                     Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => state.resize(state.window.size),

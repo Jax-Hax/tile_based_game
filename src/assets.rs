@@ -10,7 +10,7 @@ pub struct AssetServer<T: Component> {
     pub materials_to_be_loaded: Vec<String>,
     pub material_index: usize,
 }
-impl<T: Component> AssetServer<T> {
+impl<T: Component + Clone> AssetServer<T> {
     pub fn new() -> Self {
         Self {
             material_assets: vec![],
@@ -36,8 +36,8 @@ impl<T: Component> AssetServer<T> {
             self.material_assets.push(state.compile_material(&material_path).await);
         }
         self.materials_to_be_loaded = vec![];
-        for (vertices, indices, instances, material_idx, is_updating) in self.meshes_to_be_loaded.into_iter() {
-            state.build_mesh_internal(vertices, indices, instances, material_idx, is_updating)
+        for (vertices, indices, instances, material_idx, is_updating) in self.meshes_to_be_loaded.iter_mut() {
+            state.build_mesh_internal(vertices, indices, instances.to_vec(), material_idx, is_updating)
         }
         self.material_index = self.material_assets.len();
     }

@@ -310,11 +310,11 @@ impl State {
     }
     pub fn build_mesh_internal<T: Component>(
         &mut self,
-        vertices: Vec<Vertex>,
-        indices: Vec<u32>,
+        vertices: &mut Vec<Vertex>,
+        indices: &mut Vec<u32>,
         instances: Vec<(Instance,T)>,
-        material_idx: usize,
-        is_updating: bool,
+        material_idx: &mut usize,
+        is_updating: &mut bool,
     ) {
         let vertex_buffer = self
             .device
@@ -334,7 +334,7 @@ impl State {
             vertex_buffer,
             index_buffer,
             num_elements: indices.len() as u32,
-            material_idx,
+            material_idx: *material_idx,
         };
         let mut instance_data = vec![];
         let mut length = 0;
@@ -350,7 +350,7 @@ impl State {
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Instance Buffer"),
                 contents: bytemuck::cast_slice(&instance_data),
-                usage: if is_updating {
+                usage: if *is_updating {
                     wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
                 } else {
                     wgpu::BufferUsages::VERTEX

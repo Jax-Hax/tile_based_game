@@ -1,14 +1,16 @@
 use std::iter;
 
-use crate::{resources::UpdateInstance, state::State};
+use bevy_ecs::component::Component;
 
-pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
+use crate::{resources::UpdateInstance, state::State, assets::AssetServer};
+
+pub fn render<T: Component>(state: &mut State) -> Result<(), wgpu::SurfaceError> {
     let output = state.window.surface.get_current_texture()?;
     let instance_updater = state.world.get_resource::<UpdateInstance>().unwrap();
     let view = output
         .texture
         .create_view(&wgpu::TextureViewDescriptor::default());
-
+    let mut asset_server = state.world.get_resource_mut::<AssetServer<T>>().unwrap();
     let mut encoder = state
         .device
         .create_command_encoder(&wgpu::CommandEncoderDescriptor {
@@ -49,7 +51,8 @@ pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
                 game_object.mesh.index_buffer.slice(..),
                 wgpu::IndexFormat::Uint32,
             );
-            render_pass.set_bind_group(0, &game_object.mesh.material.bind_group, &[]);
+            let material = &asset_server.material_assets[game_object.mesh.material_idx];
+            render_pass.set_bind_group(0, &material.bind_group, &[]);
             render_pass.draw_indexed(0..game_object.mesh.num_elements, 0, 0..game_object.length);
         }
     }
