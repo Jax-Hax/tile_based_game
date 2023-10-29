@@ -1,10 +1,11 @@
 use glam::Vec3;
 use tile_based_game::prelude::*;
-use tile_game::{terrain::gen, ui::gen_new_world_btn};
+use tile_game::{terrain::{gen, chunk_render_checker}, ui::gen_new_world_btn};
 mod tile_game{
     pub mod terrain;
     pub mod terrain_passes;
     pub mod ui;
+    pub mod player;
 }
 fn main() {
     pollster::block_on(run());
@@ -20,6 +21,8 @@ pub async fn run() {
     //custom mesh
     let mut world = gen(1000, 500, 1);
     world.save_to_image("output.png");
+    state.world.insert_resource(world);
+    state.schedule.add_systems(chunk_render_checker);
     //render loop
     
     gen_new_world_btn(&mut state).await;

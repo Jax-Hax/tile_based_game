@@ -1,14 +1,39 @@
+use bevy_ecs::system::{Query, Resource, Res, ResMut};
 use glam::{Vec2, Vec3};
 use image::RgbImage;
 use noise::{Perlin, permutationtable::PermutationTable};
 use tile_based_game::{material::Material, prelude::Instance, primitives::rect, state::State};
 
-use super::terrain_passes::basic_caves_pass;
+use super::{terrain_passes::basic_caves_pass, player::Player};
 pub fn gen(width: usize, height: usize, seed: u32) -> World {
     let mut world = World::new(width, height);
     let hasher = PermutationTable::new(seed);
     basic_caves_pass(&mut world, &hasher);
     world
+}
+pub fn chunk_render_checker(world: ResMut<World>, player: Res<Player>) {
+    let mut col_idx: u32 = 0;
+    let (player_x, player_y) = player.block_position();
+    for chunk_col in &mut world.chunks { //TODO: Change this to be only chunks near the player for efficiency
+        let mut row_idx: u32 = 0;
+        for chunk in chunk_col {
+            let chunk_x = col_idx * 16;
+            let chunk_y = col_idx * 16;
+            let x_dif = chunk_x.abs_diff(player_x);
+            let y_dif = chunk_y.abs_diff(player_y);
+            if chunk.rendered {
+                
+            }
+            else{
+                if x_dif < 17 && y_dif < 17 {
+                    chunk.rendered = true;
+                    render_chunk(chunk, state) //SEPERATE WORLD AND SCHEDULE FROM STATE THEN MAKE STATE A RESOURCE SO YOU CAN BUILD MESHES IN RUNTIME
+                }
+            }
+            row_idx += 1;
+        }
+        col_idx += 1;
+    }
 }
 async fn render_chunk(chunk: &mut Chunk, state: &mut State) {
     let mut row_idx = 0;
@@ -43,6 +68,7 @@ async fn render_chunk(chunk: &mut Chunk, state: &mut State) {
 pub struct Block {
     pub block_id: u32,
 }
+#[derive(Resource)]
 pub struct World {
     pub world_width: usize,
     pub world_height: usize,
@@ -54,6 +80,7 @@ impl World {
     pub fn new(width: usize, height: usize) -> Self {
         let chunks = Chunk {
             rows: [[Block { block_id: 0 }; 16]; 16],
+            rendered: false,
         };
         World {
             world_width: width / 16 * 16,
@@ -98,6 +125,7 @@ impl World {
 #[derive(Clone, Copy)]
 pub struct Chunk {
     pub rows: [[Block; 16]; 16], //16x16 squares
+    pub rendered: bool,
 }
 pub struct Chest {}
 pub struct BlockType {
