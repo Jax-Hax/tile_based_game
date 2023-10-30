@@ -1,17 +1,13 @@
 use std::iter;
+use crate::{state::State, assets::AssetServer};
 
-use bevy_ecs::component::Component;
-
-use crate::{resources::UpdateInstance, state::State, assets::AssetServer};
-
-pub fn render<T: Component>(state: &mut State) -> Result<(), wgpu::SurfaceError> {
+pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
     let output = state.window.surface.get_current_texture()?;
-    let instance_updater = state.world.get_resource::<UpdateInstance>().unwrap();
     let view = output
         .texture
         .create_view(&wgpu::TextureViewDescriptor::default());
-    let mut asset_server = state.world.get_resource_mut::<AssetServer<T>>().unwrap();
-    let mut encoder = state
+    let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
+    let mut encoder = asset_server
         .device
         .create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("Render Encoder"),
@@ -44,7 +40,7 @@ pub fn render<T: Component>(state: &mut State) -> Result<(), wgpu::SurfaceError>
         });
         render_pass.set_pipeline(&state.render_pipeline);
         render_pass.set_bind_group(1, &state.camera.bind_group, &[]);
-        for (_, game_object) in &instance_updater.prefab_slab {
+        for (_, game_object) in &asset_server.prefab_slab {
             render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
             render_pass.set_vertex_buffer(0, game_object.mesh.vertex_buffer.slice(..));
             render_pass.set_index_buffer(
@@ -57,7 +53,7 @@ pub fn render<T: Component>(state: &mut State) -> Result<(), wgpu::SurfaceError>
         }
     }
 
-    instance_updater.queue.submit(iter::once(encoder.finish()));
+    asset_server.queue.submit(iter::once(encoder.finish()));
     output.present();
 
     Ok(())

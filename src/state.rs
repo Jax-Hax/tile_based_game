@@ -150,9 +150,9 @@ impl State {
             self.window.size = new_size;
             self.config.width = new_size.width;
             self.config.height = new_size.height;
-            let device = self.world
+            let device = &self.world
             .get_resource_mut::<AssetServer>().unwrap().device;
-            self.window.surface.configure(&device, &self.config);
+            self.window.surface.configure(device, &self.config);
             self.depth_texture =
                 texture::Texture::create_depth_texture(&device, &self.config, "depth_texture");
         }

@@ -1,8 +1,7 @@
 use bevy_ecs::system::Resource;
-use slab::Slab;
 use winit::{dpi::PhysicalPosition, event::{VirtualKeyCode, ElementState}};
 
-use crate::{prefabs::Prefab, state::State, camera::Camera};
+use crate::camera::Camera;
 #[derive(Resource)]
 pub struct WindowEvents {
     pub keys_pressed: Vec<(VirtualKeyCode, ElementState)>,

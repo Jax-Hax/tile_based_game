@@ -1,7 +1,7 @@
 use bevy_ecs::component::Component;
 use glam::{Vec3, Vec2};
 
-use crate::resources::UpdateInstance;
+use crate::assets::AssetServer;
 
 #[derive(Debug, Copy, Clone, Component)]
 pub struct Instance {
@@ -20,8 +20,8 @@ impl Instance {
     pub fn to_raw(&self) -> Option<InstanceRaw> {
         if self.enabled {Some(InstanceRaw::new(self.position, self.is_world_space))} else {None}
     }
-    pub fn update(&self, instances: Vec<InstanceRaw>, instance_update: &mut UpdateInstance) {
-        instance_update.prefab_slab.get_mut(self.prefab_index).unwrap().update_buffer(instances, &instance_update.queue);
+    pub fn update(&self, instances: Vec<InstanceRaw>, asset_server: &mut AssetServer) {
+        asset_server.prefab_slab.get_mut(self.prefab_index).unwrap().update_buffer(instances, &asset_server.queue);
     }
     pub fn pos_2d(&self) -> Vec2 {
         Vec2::new(self.position.x, self.position.y)
