@@ -1,6 +1,6 @@
-use glam::Vec3;
+use glam::{Vec3, Vec2};
 use tile_based_game::{prelude::*, assets::AssetServer};
-use tile_game::{terrain::{gen, chunk_render_checker}, ui::gen_new_world_btn};
+use tile_game::{terrain::{gen, chunk_render_checker}, ui::gen_new_world_btn, player::Player};
 mod tile_game{
     pub mod terrain;
     pub mod terrain_passes;
@@ -20,14 +20,15 @@ pub async fn run() {
     let (mut state, event_loop) = State::new(false, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //add models
     //custom mesh
-    let sprite_map_idx = state.world.get_resource_mut::<AssetServer>().unwrap().queue_material("cube-diffuse.jpg");
+    let sprite_map_idx = state.world.get_resource_mut::<AssetServer>().unwrap().compile_material("cube-diffuse.jpg").await;
     let mut world = gen(1000, 500, 1, sprite_map_idx);
     world.save_to_image("output.png");
     state.world.insert_resource(world);
+    state.world.insert_resource(Player {position: Vec2::new(0.,0.).into()});
     state.schedule.add_systems(chunk_render_checker);
     //render loop
     
-    gen_new_world_btn(&mut state);
+    gen_new_world_btn(&mut state).await;
     
     
     run_event_loop(state, event_loop);

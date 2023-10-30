@@ -2,7 +2,7 @@ use bevy_ecs::system::{Resource, Res, ResMut};
 use glam::{Vec2, Vec3};
 use image::RgbImage;
 use noise::permutationtable::PermutationTable;
-use tile_based_game::{material::Material, prelude::Instance, primitives::rect, assets::AssetServer};
+use tile_based_game::{material::Material, prelude::Instance, primitives::rect_with_tex_coords, assets::AssetServer};
 
 use super::{terrain_passes::basic_caves_pass, player::Player};
 pub fn gen(width: usize, height: usize, seed: u32, sprite_map_idx: usize) -> World {
@@ -18,17 +18,20 @@ pub fn chunk_render_checker(mut world: ResMut<World>, player: Res<Player>, mut a
     for chunk_col in &mut world.chunks { //TODO: Change this to be only chunks near the player for efficiency
         let mut row_idx: u32 = 0;
         for chunk in chunk_col {
-            let chunk_x = col_idx * 16;
+            let chunk_x = row_idx * 16;
             let chunk_y = col_idx * 16;
             let x_dif = chunk_x.abs_diff(player_x);
             let y_dif = chunk_y.abs_diff(player_y);
             if chunk.rendered {
-                
+                if x_dif > 33 && y_dif < 33 {
+                    chunk.rendered = false;
+                    //render_chunk(chunk, &mut asset_server, sprite_sheet_idx);
+                }
             }
             else{
                 if x_dif < 17 && y_dif < 17 {
                     chunk.rendered = true;
-                    render_chunk(chunk, &mut asset_server, sprite_sheet_idx);
+                    render_chunk(chunk, &mut asset_server, sprite_sheet_idx, chunk_x, chunk_y);
                 }
             }
             row_idx += 1;
@@ -36,38 +39,53 @@ pub fn chunk_render_checker(mut world: ResMut<World>, player: Res<Player>, mut a
         col_idx += 1;
     }
 }
-fn render_chunk(chunk: &mut Chunk, asset_server: &mut AssetServer, sprite_sheet_idx: usize) {
+fn render_chunk(chunk: &mut Chunk, asset_server: &mut AssetServer, sprite_sheet_idx: usize, chunk_x: u32, chunk_y: u32) {
     let mut row_idx = 0;
-    let mut instances = vec![];
     let block_size = 0.2;
+    let block_size_halfed = block_size / 2.;
     let rows = &chunk.rows;
+    let mut vertices_main = vec![];
+    let mut indices_main = vec![];
     for col in rows {
         let mut col_idx = 0;
         for block in col {
-            let instance = Instance {
-                position: Vec3::new(col_idx as f32 * block_size, row_idx as f32 * block_size, 0.), //change to swithc pos
-                ..Default::default()
-            };
-            instances.push(instance);
+            let x = col_idx as f32 * block_size;
+            let y = row_idx as f32 * block_size;
+            let p1 = Vec2::new(-block_size_halfed + x, -block_size_halfed + y);
+            let p2 = Vec2::new(block_size_halfed + x, block_size_halfed + y);
+            let tex_coords = get_tex_coords(block);
+            let (mut vertices, mut indices) = rect_with_tex_coords(p1, p2, tex_coords.0, tex_coords.1);
+            vertices_main.append(&mut vertices);
+            indices_main.append(&mut indices);
             col_idx += 1;
         }
         row_idx += 1;
     }
-    let block_size_halfed = block_size / 2.;
-    let p1 = Vec2::new(-block_size_halfed, -block_size_halfed);
-    let p2 = Vec2::new(block_size_halfed, block_size_halfed);
-    let (vertices, indices) = rect(p1, p2);
     asset_server.build_mesh(
-        vertices,
-        indices,
-        instances.iter_mut().map(|instance| instance).collect(),
+        vertices_main,
+        indices_main,
+        vec![&mut Instance {position: Vec3::new(chunk_x as f32, chunk_y as f32, 0.),  ..Default::default()}],
         sprite_sheet_idx,
         false,
     );
 }
+fn get_tex_coords(block: &Block) -> (Vec2, Vec2) {
+    let id = block.block_id;
+    const NUM_SPRITES_IN_TEXTURE: u32 = 16; //must be perfect square
+    const SPRITE_SIZE: f32 = 1.0 / (NUM_SPRITES_IN_TEXTURE as f32);
+
+    let row = id / NUM_SPRITES_IN_TEXTURE;
+    let col = id % NUM_SPRITES_IN_TEXTURE;
+
+    let min_x = col as f32 * SPRITE_SIZE;
+    let max_x = min_x + SPRITE_SIZE;
+    let min_y = row as f32 * SPRITE_SIZE;
+    let max_y = min_y + SPRITE_SIZE;
+    (Vec2::new(min_x, min_y), Vec2::new(max_x,max_y))
+}
 #[derive(Clone, Copy)]
 pub struct Block {
-    pub block_id: u32,
+    pub block_id: u32, //this is used both for the blocktype and the index in the texture map
 }
 #[derive(Resource)]
 pub struct World {

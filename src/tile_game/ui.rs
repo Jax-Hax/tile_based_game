@@ -5,7 +5,7 @@ use tile_based_game::{state::State, prelude::*, primitives::rect, collision::Box
 
 use super::terrain::{gen, World};
 
-pub fn gen_new_world_btn(state: &mut State) {
+pub async fn gen_new_world_btn(state: &mut State) {
     let p1 = Vec2::new(-0.7, -0.4);
     let p2 = Vec2::new(-0.9, -0.5);
     let (vertices, indices) = rect(p1,p2);
@@ -14,7 +14,7 @@ pub fn gen_new_world_btn(state: &mut State) {
     let mut instances = vec![];
     instances.push(&mut instance);
     let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
-    let rect_idx = asset_server.queue_material("rounded_rect.png");
+    let rect_idx = asset_server.compile_material("rounded_rect.png").await;
     asset_server.build_mesh(
         vertices,
         indices,

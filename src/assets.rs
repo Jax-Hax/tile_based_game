@@ -8,8 +8,6 @@ use crate::{material::Material, prelude::{Vertex, Instance}, primitives::rect, s
 #[derive(Resource)]
 pub struct AssetServer {
     pub material_assets: Vec<Material>,
-    pub materials_to_be_loaded: Vec<String>,
-    pub material_index: usize,
     pub device: Device,
     pub queue: Queue,
     pub prefab_slab: Slab<Prefab>,
@@ -20,8 +18,6 @@ impl AssetServer {
     pub fn new(device: Device, queue: Queue, build_path: String, texture_bind_group_layout: BindGroupLayout) -> Self {
         Self {
             material_assets: vec![],
-            materials_to_be_loaded: vec![],
-            material_index: 0,
             device,
             queue,
             prefab_slab: Slab::new(),
@@ -29,25 +25,24 @@ impl AssetServer {
             texture_bind_group_layout
         }
     }
-    pub fn queue_material(&mut self, material_path: &str) -> usize {
-        self.materials_to_be_loaded.push(material_path.to_string());
-        self.material_index += 1;
-        return self.material_index - 1;
-    }
-    pub async fn next_frame(&mut self, state: &mut State) {
-        for material_path in &self.materials_to_be_loaded {
-            self.material_assets.push(self.compile_material(&material_path, &mut state.world).await);
+    pub async fn compile_materials(&mut self, material_paths: Vec<&str>) -> Vec<usize> {
+        let mut material_idxs = vec![];
+        for material_path in material_paths {
+            self.material_assets.push(self.compile_material_internal(&material_path).await);
+            material_idxs.push(self.material_assets.len() - 1);
         }
-        self.materials_to_be_loaded = vec![];
-        self.material_index = self.material_assets.len();
+        material_idxs
     }
-    async fn compile_material(&self, texture_name: &str, world: &mut World) -> Material {
-        let asset_server = world.get_resource::<AssetServer>().unwrap();
+    pub async fn compile_material(&mut self, material_path: &str) -> usize {
+        self.material_assets.push(self.compile_material_internal(&material_path).await);
+        self.material_assets.len() - 1
+    }
+    async fn compile_material_internal(&self, texture_name: &str) -> Material {
         let diffuse_texture =
-            load_texture(texture_name, &self.build_path, &asset_server.device, &asset_server.queue)
+            load_texture(texture_name, &self.build_path, &self.device, &self.queue)
                 .await
                 .unwrap();
-        let texture_bind_group = asset_server.device.create_bind_group(&wgpu::BindGroupDescriptor {
+        let texture_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout: &self.texture_bind_group_layout,
             entries: &[
                 wgpu::BindGroupEntry {
