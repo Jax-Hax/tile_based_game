@@ -41,7 +41,7 @@ impl AssetServer {
         self.materials_to_be_loaded = vec![];
         self.material_index = self.material_assets.len();
     }
-    pub async fn compile_material(&self, texture_name: &str, world: &mut World) -> Material {
+    async fn compile_material(&self, texture_name: &str, world: &mut World) -> Material {
         let asset_server = world.get_resource::<AssetServer>().unwrap();
         let diffuse_texture =
             load_texture(texture_name, &self.build_path, &asset_server.device, &asset_server.queue)
@@ -71,8 +71,7 @@ impl AssetServer {
         indices: Vec<u32>,
         instances: Vec<&mut Instance>,
         material_idx: usize,
-        is_updating: bool,
-        world: &mut World
+        is_updating: bool
     ) {
         let vertex_buffer = self
             .device

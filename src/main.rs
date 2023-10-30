@@ -27,7 +27,7 @@ pub async fn run() {
     state.schedule.add_systems(chunk_render_checker);
     //render loop
     
-    gen_new_world_btn(&mut state).await;
+    gen_new_world_btn(&mut state);
     
     
     run_event_loop(state, event_loop);

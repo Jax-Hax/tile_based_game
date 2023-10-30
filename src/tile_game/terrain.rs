@@ -1,8 +1,8 @@
-use bevy_ecs::system::{Query, Resource, Res, ResMut};
+use bevy_ecs::system::{Resource, Res, ResMut};
 use glam::{Vec2, Vec3};
 use image::RgbImage;
-use noise::{Perlin, permutationtable::PermutationTable};
-use tile_based_game::{material::Material, prelude::Instance, primitives::rect, state::State, assets::AssetServer};
+use noise::permutationtable::PermutationTable;
+use tile_based_game::{material::Material, prelude::Instance, primitives::rect, assets::AssetServer};
 
 use super::{terrain_passes::basic_caves_pass, player::Player};
 pub fn gen(width: usize, height: usize, seed: u32, sprite_map_idx: usize) -> World {
@@ -57,10 +57,10 @@ fn render_chunk(chunk: &mut Chunk, asset_server: &mut AssetServer, sprite_sheet_
     let p1 = Vec2::new(-block_size_halfed, -block_size_halfed);
     let p2 = Vec2::new(block_size_halfed, block_size_halfed);
     let (vertices, indices) = rect(p1, p2);
-    asset_server.queue_mesh(
+    asset_server.build_mesh(
         vertices,
         indices,
-        instances,
+        instances.iter_mut().map(|instance| instance).collect(),
         sprite_sheet_idx,
         false,
     );

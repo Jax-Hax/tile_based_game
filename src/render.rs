@@ -6,7 +6,7 @@ pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
     let view = output
         .texture
         .create_view(&wgpu::TextureViewDescriptor::default());
-    let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
+    let asset_server = state.world.get_resource::<AssetServer>().unwrap();
     let mut encoder = asset_server
         .device
         .create_command_encoder(&wgpu::CommandEncoderDescriptor {
