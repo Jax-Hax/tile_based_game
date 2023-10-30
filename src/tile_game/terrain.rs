@@ -25,11 +25,11 @@ pub fn chunk_render_checker(mut world: ResMut<World>, player: Res<Player>, mut a
             if chunk.rendered {
                 if x_dif > 33 && y_dif < 33 {
                     chunk.rendered = false;
-                    //render_chunk(chunk, &mut asset_server, sprite_sheet_idx);
+                    asset_server.remove_prefab(chunk.prefab_idx);
                 }
             }
             else{
-                if x_dif < 17 && y_dif < 17 {
+                if x_dif < 50 && y_dif < 50 {
                     chunk.rendered = true;
                     println!(" i did ");
                     render_chunk(chunk, &mut asset_server, sprite_sheet_idx, chunk_x, chunk_y);
@@ -63,13 +63,15 @@ fn render_chunk(chunk: &mut Chunk, asset_server: &mut AssetServer, sprite_sheet_
         }
         row_idx += 1;
     }
+    let mut instance = Instance {position: Vec3::new(chunk_x as f32, chunk_y as f32, 0.),  ..Default::default()};
     asset_server.build_mesh(
         vertices_main,
         indices_main,
-        vec![&mut Instance {position: Vec3::new(chunk_x as f32, chunk_y as f32, 0.),  ..Default::default()}],
+        vec![&mut instance],
         sprite_sheet_idx,
         false,
     );
+    chunk.prefab_idx = instance.prefab_index;
 }
 fn get_tex_coords(block: &Block) -> (Vec2, Vec2) {
     let id = block.block_id;
@@ -103,6 +105,7 @@ impl World {
         let chunks = Chunk {
             rows: [[Block { block_id: 0 }; 16]; 16],
             rendered: false,
+            prefab_idx: 0
         };
         World {
             world_width: width / 16 * 16,
@@ -149,6 +152,7 @@ impl World {
 pub struct Chunk {
     pub rows: [[Block; 16]; 16], //16x16 squares
     pub rendered: bool,
+    pub prefab_idx: usize
 }
 pub struct Chest {}
 pub struct BlockType {

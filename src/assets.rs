@@ -25,6 +25,12 @@ impl AssetServer {
             texture_bind_group_layout
         }
     }
+    pub fn remove_prefab(&mut self, prefab_idx: usize) {
+        self.prefab_slab.remove(prefab_idx);
+    }
+    pub fn clear_all_prefabs(&mut self) {
+        self.prefab_slab.clear();
+    }
     pub async fn compile_materials(&mut self, material_paths: Vec<&str>) -> Vec<usize> {
         let mut material_idxs = vec![];
         for material_path in material_paths {

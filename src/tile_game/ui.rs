@@ -1,4 +1,4 @@
-use bevy_ecs::system::{Query, Res};
+use bevy_ecs::system::{Query, Res, ResMut};
 use glam::Vec2;
 use rand::Rng;
 use tile_based_game::{state::State, prelude::*, primitives::rect, collision::Box2D, assets::AssetServer};
@@ -25,9 +25,14 @@ pub async fn gen_new_world_btn(state: &mut State) {
     state.world.spawn((instance, collider));
     state.schedule.add_systems(check_collisions);
 }
-fn check_collisions(query: Query<(&Instance, &Box2D)>, window_events: Res<WindowEvents>, world: Res<World>) {
+fn check_collisions(query: Query<(&Instance, &Box2D)>, window_events: Res<WindowEvents>, world: Res<World>, mut asset_server: ResMut<AssetServer>) {
     for (instance, collider) in &query {
         if collider.check_collision(instance, &window_events) && window_events.left_clicked() {
+            for chunk_row in &world.chunks {
+                for chunk in chunk_row {
+                    if chunk.rendered {println!("{}", chunk.prefab_idx);asset_server.remove_prefab(chunk.prefab_idx);}
+                }
+            }
             let mut world = gen(1000, 500, rand::thread_rng().gen_range(0..100000), world.sprite_map_idx);
             world.save_to_image("output.png");
         }
