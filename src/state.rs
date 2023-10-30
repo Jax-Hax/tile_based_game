@@ -1,11 +1,8 @@
 use crate::{
     camera::{Camera, CameraStruct},
-    prefabs::Prefab,
-    prelude::{Vertex, Instance},
-    loader::load_texture,
     shader,
-    structs::{CameraController, Mesh},
-    texture, window, resources::{UpdateInstance, DeltaTime, WindowEvents, MouseClickType}, primitives::rect, material::Material,
+    structs::CameraController,
+    texture, window, resources::{DeltaTime, WindowEvents, MouseClickType}, assets::AssetServer,
 };
 use bevy_ecs::prelude::*;
 use glam::Vec2;
@@ -19,7 +16,6 @@ use winit::{
     window::Window,
 };
 pub struct State {
-    pub device: wgpu::Device,
     pub config: wgpu::SurfaceConfiguration,
     pub render_pipeline: wgpu::RenderPipeline,
     pub camera: CameraStruct,
@@ -27,7 +23,6 @@ pub struct State {
     pub window: window::Window,
     pub texture_bind_group_layout: wgpu::BindGroupLayout,
     pub mouse_locked: bool,
-    build_path: String,
     pub world: World,
     pub schedule: Schedule,
 }
@@ -126,17 +121,13 @@ impl State {
         );
         window.window.set_visible(true);
         let mut world = World::new();
-        world.insert_resource(UpdateInstance {
-            queue,
-            prefab_slab: Slab::new(),
-        });
+        world.insert_resource(AssetServer::new(device, queue, build_path.to_string()));
         world.insert_resource(DeltaTime { dt: Duration::ZERO });
         world.insert_resource(WindowEvents { keys_pressed: vec![], screen_mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 }, world_mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 },left_mouse: MouseClickType::NotHeld, right_mouse: MouseClickType::NotHeld, middle_mouse: MouseClickType::NotHeld, aspect_ratio: (config.width as f32)/(config.height as f32) });
         let schedule = Schedule::default();
         (
             
             Self {
-                device,
                 config,
                 render_pipeline,
                 camera,
@@ -144,7 +135,6 @@ impl State {
                 window,
                 texture_bind_group_layout,
                 mouse_locked: mouse_lock,
-                build_path: build_path.to_string(),
                 world,
                 schedule,
             },
@@ -216,216 +206,11 @@ impl State {
         self.camera
             .camera_uniform
             .update_view_proj(&self.camera.camera_transform);
-        let queue = self.world.get_resource_mut::<UpdateInstance>().unwrap();
+        let queue = self.world.get_resource_mut::<AssetServer>().unwrap();
         queue.queue.write_buffer(
             &self.camera.buffer,
             0,
             bytemuck::cast_slice(&[self.camera.camera_uniform]),
         );
-    }
-    pub async fn compile_material(&self, texture_name: &str) -> Material {
-        let queue = self.world.get_resource::<UpdateInstance>().unwrap();
-        let diffuse_texture =
-            load_texture(texture_name, &self.build_path, &self.device, &queue.queue)
-                .await
-                .unwrap();
-        let texture_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &self.texture_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&diffuse_texture.view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&diffuse_texture.sampler),
-                },
-            ],
-            label: None,
-        });
-        Material {
-            bind_group: texture_bind_group,
-        }
-    }
-    pub fn build_mesh(
-        &mut self,
-        vertices: Vec<Vertex>,
-        indices: Vec<u32>,
-        instances: Vec<&mut Instance>,
-        material_idx: usize,
-        is_updating: bool,
-    ) {
-        let vertex_buffer = self
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(&vertices),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-        let index_buffer = self
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(&indices),
-                usage: wgpu::BufferUsages::INDEX,
-            });
-        let mesh = Mesh {
-            vertex_buffer,
-            index_buffer,
-            num_elements: indices.len() as u32,
-            material_idx,
-        };
-        let mut instance_data = vec![];
-        let mut length = 0;
-        for instance in &instances {
-            let instance_raw = instance.to_raw();
-            if instance_raw.is_some() {
-                instance_data.push(instance_raw.unwrap());
-                length += 1;
-            }
-        }
-        let instance_buffer = self
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Instance Buffer"),
-                contents: bytemuck::cast_slice(&instance_data),
-                usage: if is_updating {
-                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
-                } else {
-                    wgpu::BufferUsages::VERTEX
-                },
-            });
-        let container = Prefab::new(
-            instance_buffer,
-            mesh,
-            length,
-        );
-        let mut update_instance = self.world.get_resource_mut::<UpdateInstance>().unwrap();
-        let entry = update_instance.prefab_slab.vacant_entry();
-        let key = entry.key();
-        for instance in instances {
-            instance.prefab_index = key;
-        }
-        entry.insert(container);
-    }
-    pub fn build_mesh_internal<T: Component>(
-        &mut self,
-        vertices: &mut Vec<Vertex>,
-        indices: &mut Vec<u32>,
-        instances: Vec<(Instance,T)>,
-        material_idx: &mut usize,
-        is_updating: &mut bool,
-    ) {
-        let vertex_buffer = self
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(&vertices),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-        let index_buffer = self
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(&indices),
-                usage: wgpu::BufferUsages::INDEX,
-            });
-        let mesh = Mesh {
-            vertex_buffer,
-            index_buffer,
-            num_elements: indices.len() as u32,
-            material_idx: *material_idx,
-        };
-        let mut instance_data = vec![];
-        let mut length = 0;
-        for (instance,_) in &instances {
-            let instance_raw = instance.to_raw();
-            if instance_raw.is_some() {
-                instance_data.push(instance_raw.unwrap());
-                length += 1;
-            }
-        }
-        let instance_buffer = self
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Instance Buffer"),
-                contents: bytemuck::cast_slice(&instance_data),
-                usage: if *is_updating {
-                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
-                } else {
-                    wgpu::BufferUsages::VERTEX
-                },
-            });
-        let container = Prefab::new(
-            instance_buffer,
-            mesh,
-            length,
-        );
-        let mut update_instance = self.world.get_resource_mut::<UpdateInstance>().unwrap();
-        let entry = update_instance.prefab_slab.vacant_entry();
-        let key = entry.key();
-        for (mut instance,_) in instances {
-            instance.prefab_index = key;
-        }
-        entry.insert(container);
-        self.world.spawn_batch(instances);
-    }
-    pub fn make_sprites(
-        &mut self,
-        instances: Vec<&mut Instance>,
-        material_idx: usize,
-        is_updating: bool
-    ) {
-        //make sprite mesh
-        let (vertices, indices) = rect(Vec2::new(0.5,0.5), Vec2::new(-0.5,-0.5));
-        let vertex_buffer = self.device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(&vertices),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-        let index_buffer = self.device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(&indices),
-                usage: wgpu::BufferUsages::INDEX,
-            });
-            
-        let mesh = Mesh {
-            vertex_buffer,index_buffer, num_elements: indices.len() as u32,
-            material_idx,
-        };
-        let mut instance_data = vec![];
-        let mut length = 0;
-        for instance in &instances {
-            let instance_raw = instance.to_raw();
-            if instance_raw.is_some() {
-                instance_data.push(instance_raw.unwrap());
-                length += 1;
-            }
-        }
-        let instance_buffer = self
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Instance Buffer"),
-                contents: bytemuck::cast_slice(&instance_data),
-                usage: if is_updating {
-                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
-                } else {
-                    wgpu::BufferUsages::VERTEX
-                },
-            });
-        let container = Prefab::new(
-            instance_buffer,
-            mesh,
-            length,
-        );
-        let mut update_instance = self.world.get_resource_mut::<UpdateInstance>().unwrap();
-        let entry = update_instance.prefab_slab.vacant_entry();
-        let key = entry.key();
-        for instance in instances {
-            instance.prefab_index = key;
-        }
-        entry.insert(container);
     }
 }
