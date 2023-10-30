@@ -1,9 +1,9 @@
-use bevy_ecs::{system::Resource, world::World};
+use bevy_ecs::system::Resource;
 use glam::Vec2;
 use slab::Slab;
 use wgpu::{Device, Queue, util::DeviceExt, BindGroupLayout};
 
-use crate::{material::Material, prelude::{Vertex, Instance}, primitives::rect, state::State, prefabs::Prefab, structs::Mesh, loader::load_texture};
+use crate::{material::Material, prelude::{Vertex, Instance}, primitives::rect, prefabs::Prefab, structs::Mesh, loader::load_texture};
 
 #[derive(Resource)]
 pub struct AssetServer {

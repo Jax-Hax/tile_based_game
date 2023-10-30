@@ -20,7 +20,7 @@ pub async fn run() {
     let (mut state, event_loop) = State::new(false, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //add models
     //custom mesh
-    let sprite_map_idx = state.world.get_resource_mut::<AssetServer>().unwrap().compile_material("cube-diffuse.jpg").await;
+    let sprite_map_idx = state.world.get_resource_mut::<AssetServer>().unwrap().compile_material("texture_atlas.png").await;
     let mut world = gen(1000, 500, 1, sprite_map_idx);
     world.save_to_image("output.png");
     state.world.insert_resource(world);

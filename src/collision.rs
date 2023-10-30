@@ -26,9 +26,6 @@ impl Box2D {
     pub fn check_collision(&self, instance: &Instance, window_events: &WindowEvents) -> bool {
         let x = window_events.screen_mouse_pos.x + instance.position.x;
         let y = (window_events.screen_mouse_pos.y + instance.position.y) / window_events.aspect_ratio;
-        println!("max: {}, {}", self.x_max, self.y_max);
-        println!("min: {}, {}", self.x_min, self.y_min);
-        println!("{}, {}", x, y);
         if self.enabled{
             if x < self.x_max && x > self.x_min && y < self.y_max && y > self.y_min {
                 return true;

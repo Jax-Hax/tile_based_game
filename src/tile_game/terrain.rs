@@ -31,6 +31,7 @@ pub fn chunk_render_checker(mut world: ResMut<World>, player: Res<Player>, mut a
             else{
                 if x_dif < 17 && y_dif < 17 {
                     chunk.rendered = true;
+                    println!(" i did ");
                     render_chunk(chunk, &mut asset_server, sprite_sheet_idx, chunk_x, chunk_y);
                 }
             }
@@ -51,6 +52,7 @@ fn render_chunk(chunk: &mut Chunk, asset_server: &mut AssetServer, sprite_sheet_
         for block in col {
             let x = col_idx as f32 * block_size;
             let y = row_idx as f32 * block_size;
+            println!("{},{}", x, y);
             let p1 = Vec2::new(-block_size_halfed + x, -block_size_halfed + y);
             let p2 = Vec2::new(block_size_halfed + x, block_size_halfed + y);
             let tex_coords = get_tex_coords(block);
