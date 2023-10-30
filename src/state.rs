@@ -5,10 +5,7 @@ use crate::{
     texture, window, resources::{DeltaTime, WindowEvents, MouseClickType}, assets::AssetServer,
 };
 use bevy_ecs::prelude::*;
-use glam::Vec2;
 use instant::Duration;
-use slab::Slab;
-use wgpu::util::DeviceExt;
 use winit::{
     dpi::PhysicalPosition,
     event::{ElementState, KeyboardInput, MouseButton, WindowEvent},
@@ -21,7 +18,6 @@ pub struct State {
     pub camera: CameraStruct,
     pub depth_texture: texture::Texture,
     pub window: window::Window,
-    pub texture_bind_group_layout: wgpu::BindGroupLayout,
     pub mouse_locked: bool,
     pub world: World,
     pub schedule: Schedule,
@@ -121,7 +117,7 @@ impl State {
         );
         window.window.set_visible(true);
         let mut world = World::new();
-        world.insert_resource(AssetServer::new(device, queue, build_path.to_string()));
+        world.insert_resource(AssetServer::new(device, queue, build_path.to_string(),texture_bind_group_layout));
         world.insert_resource(DeltaTime { dt: Duration::ZERO });
         world.insert_resource(WindowEvents { keys_pressed: vec![], screen_mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 }, world_mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 },left_mouse: MouseClickType::NotHeld, right_mouse: MouseClickType::NotHeld, middle_mouse: MouseClickType::NotHeld, aspect_ratio: (config.width as f32)/(config.height as f32) });
         let schedule = Schedule::default();
@@ -133,7 +129,6 @@ impl State {
                 camera,
                 depth_texture,
                 window,
-                texture_bind_group_layout,
                 mouse_locked: mouse_lock,
                 world,
                 schedule,
@@ -155,9 +150,11 @@ impl State {
             self.window.size = new_size;
             self.config.width = new_size.width;
             self.config.height = new_size.height;
-            self.window.surface.configure(&self.device, &self.config);
+            let device = self.world
+            .get_resource_mut::<AssetServer>().unwrap().device;
+            self.window.surface.configure(&device, &self.config);
             self.depth_texture =
-                texture::Texture::create_depth_texture(&self.device, &self.config, "depth_texture");
+                texture::Texture::create_depth_texture(&device, &self.config, "depth_texture");
         }
     }
     pub fn input(&mut self, event: &WindowEvent) -> bool {
